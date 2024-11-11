@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-// import { sendMessage } from "@/lib/whatsapp";
+import whatsapp from "@/lib/whatsapp";
 import repository from "@/lib/repository";
 
 export async function GET(request: NextRequest) {
@@ -10,8 +10,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  await repository.deleteMatchPlayers();
-  // await sendMessage();
+  try {
+    await repository.deleteMatchPlayers();
+    await whatsapp.startNewEvent();
 
-  return Response.json({ success: true });
+    return Response.json({ success: true });
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return new Response("Error processing request", { status: 500 });
+  }
 }

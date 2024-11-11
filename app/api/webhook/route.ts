@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+// import whatsapp from "@/lib/whatsapp"
 
 export function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get("hub.mode");
