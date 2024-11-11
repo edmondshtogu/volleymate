@@ -4,14 +4,15 @@ const whatsapp = {
   startNewEvent: async (): Promise<void> => {
     const requestConfig: AxiosRequestConfig = {
       method: "POST",
-      url: `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+      url: `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
       },
       data: {
         messaging_product: "whatsapp",
-        to: "355697748184",
+        to: "355697748184", 
+        // to: process.env.WHATSAPP_GROUP_ID, 
         type: "template",
         template: {
           name: "skills_registration",
@@ -31,7 +32,7 @@ const whatsapp = {
   ): Promise<void> => {
     const requestConfig: AxiosRequestConfig = {
       method: "POST",
-      url: `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+      url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`,
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
@@ -54,7 +55,7 @@ const whatsapp = {
   ): Promise<void> => {
     const requestConfig: AxiosRequestConfig = {
       method: "POST",
-      url: `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
+      url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`,
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
