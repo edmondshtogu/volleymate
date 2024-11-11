@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/webhook",
+      "destination": "/api/webhook"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/scheduler",
+      "schedule": "0 10 * * 1"
+    }
+  ]
+}
