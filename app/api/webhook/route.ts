@@ -24,6 +24,8 @@ export function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.info("Processing request:", JSON.stringify(body));
+
     const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
     if (message?.type === "text") {

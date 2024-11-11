@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error("Error processing request:", error);
+    console.error("Error processing request:", JSON.stringify(error));
     return new Response("Error processing request", { status: 500 });
   }
 }

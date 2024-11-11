@@ -11,7 +11,7 @@ const whatsapp = {
       },
       data: {
         messaging_product: "whatsapp",
-        to: process.env.WHATSAPP_GROUP_ID,
+        to: "355697748184",
         type: "template",
         template: {
           name: "skills_registration",
@@ -54,7 +54,7 @@ const whatsapp = {
   ): Promise<void> => {
     const requestConfig: AxiosRequestConfig = {
       method: "POST",
-      url: `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`,
+      url: `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`,
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
