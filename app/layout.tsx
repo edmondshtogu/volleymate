@@ -1,3 +1,6 @@
+import { Footer } from "@/components/footer/Footer";
+import Menu from "@/components/menu/Menu";
+import NavBar from "@/components/navBar/NavBar";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -20,15 +23,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-[#2A3447] text-white flex flex-col min-h-screen`}
       >
-        {children}
+        <header>
+          <NavBar />
+        </header>
+        <main className="flex flex-1">
+          <section className="flex md:p-5 flex-1">
+            <Menu />
+            {children}
+          </section>
+        </main>
+        <footer>
+          <Footer />
+        </footer>
       </body>
     </html>
   );

@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import whatsapp from "@/lib/whatsapp";
 import repository from "@/lib/repository";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +11,6 @@ export async function GET(request: NextRequest) {
 
   try {
     await repository.deleteMatchPlayers();
-    await whatsapp.startNewEvent();
 
     return Response.json({ success: true });
   } catch (error) {
