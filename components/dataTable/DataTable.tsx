@@ -12,7 +12,9 @@ type Props = {
 };
 
 function DataTable(props: Props) {
-    const handleDelete = (id: number) => {};
+    const handleDelete = (id: number) => {
+      console.info("delete", id)
+    };
     const actionColumn: GridColDef = {
       field: "action",
       headerName: "Action",
@@ -21,7 +23,7 @@ function DataTable(props: Props) {
       resizable: false,
       renderCell: (params) => {
         return (
-          <div className="flex gap-4">
+          <div className="flex gap-3 items-center">
             {props.slug !== "orders" ? (
               <Link href={`/${props.slug}/${params.row.id}`}>
                 <Image
@@ -96,6 +98,7 @@ function DataTable(props: Props) {
           disableColumnFilter
           disableDensitySelector
           disableColumnSelector
+          disableColumnMenu
           sx={{
             ".MuiDataGrid-columnSeparator": {
               display: "none",

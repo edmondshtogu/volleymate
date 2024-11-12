@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { userRows } from "@/data/users";
 
 const NavBar = () => {
     return (
@@ -28,7 +29,7 @@ const NavBar = () => {
               height={26}
               alt="user icon"
             />
-            <span>Dave</span>
+            <span>{userRows.find(user => user.id === 1)?.info.fullname}</span>
           </div>
         </div>
       </nav>
