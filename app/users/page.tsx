@@ -6,7 +6,6 @@ import Image from "next/image";
 import React from "react";
 import { userRows } from "@/data/users";
 
-
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", headerClassName: "bg-slate-400", width: 50 },
   {
