@@ -8,17 +8,16 @@ import {
   numeric,
   integer,
   timestamp,
-  pgEnum,
   serial,
-  boolean
+  boolean,
+  pgEnum
 } from 'drizzle-orm/pg-core';
-import { count, eq, ilike } from 'drizzle-orm';
+import { count, desc, eq, ilike, notInArray } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
 export const statusEnum = pgEnum('status', ['active', 'inactive', 'archived']);
-
 export const products = pgTable('products', {
   id: serial('id').primaryKey(),
   imageUrl: text('image_url').notNull(),
@@ -28,10 +27,8 @@ export const products = pgTable('products', {
   stock: integer('stock').notNull(),
   availableAt: timestamp('available_at').notNull()
 });
-
 export type SelectProduct = typeof products.$inferSelect;
 export const insertProductSchema = createInsertSchema(products);
-
 export async function getProducts(
   search: string,
   offset: number
@@ -67,7 +64,6 @@ export async function getProducts(
     totalProducts: totalProducts[0].count
   };
 }
-
 export async function deleteProductById(id: number) {
   await db.delete(products).where(eq(products.id, id));
 }
@@ -131,13 +127,74 @@ export const skillsSet = pgTable('skills_set', {
   athleticismVerticalJump: skillScaleEnum('athleticism_vertical_jump').notNull(),
   athleticismStamina: skillScaleEnum('athleticism_stamina').notNull(),
 });
+export type SelectSkillsSet = typeof skillsSet.$inferSelect;
+export const insertSkillsSetSchema = createInsertSchema(skillsSet);
 
 // Player Table
 export const players = pgTable('players', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  configured: boolean('configured').notNull(),
+  email: text('email').notNull(), // New email column
+  configured: boolean('configured').notNull()
 });
+export type SelectPlayer = typeof players.$inferSelect;
+export const insertPlayerSchema = createInsertSchema(players);
+export async function getPlayerById(
+  id: number
+): Promise<SelectPlayer & { skills: SelectSkillsSet | null }> {
+  const player = await db
+    .select()
+    .from(players)
+    .where(eq(players.id, id))
+    .limit(1);
+  const skills =
+    player.length > 0
+      ? await db
+          .select()
+          .from(skillsSet)
+          .where(eq(skillsSet.playerId, id))
+          .limit(1)
+      : null;
+  return { ...player[0], skills: skills ? skills[0] : null };
+}
+export async function getPlayers(
+  search: string,
+  offset: number
+): Promise<{
+  players: SelectPlayer[];
+  newOffset: number | null;
+  totalPlayers: number;
+}> {
+  // Always search the full table, not per page
+  if (search) {
+    return {
+      players: await db
+        .select()
+        .from(players)
+        .where(ilike(players.name, `%${search}%`))
+        .limit(1000),
+      newOffset: null,
+      totalPlayers: 0
+    };
+  }
+
+  if (offset === null) {
+    return { players: [], newOffset: null, totalPlayers: 0 };
+  }
+
+  let totalPlayers = await db.select({ count: count() }).from(players);
+  let morePlayers = await db.select().from(players).limit(5).offset(offset);
+  let newOffset = morePlayers.length >= 5 ? offset + 5 : null;
+
+  return {
+    players: morePlayers,
+    newOffset,
+    totalPlayers: totalPlayers[0].count
+  };
+}
+export async function deletePlayerById(id: number) {
+  await db.delete(players).where(eq(players.id, id));
+}
 
 // Event Table
 export const events = pgTable('events', {
@@ -146,6 +203,27 @@ export const events = pgTable('events', {
   location: text('location').notNull(),
   date: timestamp('date').notNull(),
 });
+export type SelectEvent = typeof events.$inferSelect;
+export const insertEventSchema = createInsertSchema(events);
+export async function getEvents(): Promise<SelectEvent[]> {
+  return await db.select().from(events);
+}
+export async function retainTop2Events() {
+  const topEvents = await db
+    .select()
+    .from(events)
+    .orderBy(desc(events.date))
+    .limit(2);
+  const topEventIds = topEvents.map((event) => event.id);
+
+  // Delete participants not in top 3 events
+  await db
+    .delete(participants)
+    .where(notInArray(participants.eventId, topEventIds));
+
+  // Delete events not in top 3
+  await db.delete(events).where(notInArray(events.id, topEventIds));
+}
 
 // Participant Table
 export const participants = pgTable('participants', {
@@ -155,9 +233,50 @@ export const participants = pgTable('participants', {
   team: text('team').notNull(),
   withdrewAt: timestamp('withdrew_at'),
 });
-
-// Schemas for insertion using drizzle-zod
-export const insertPlayerSchema = createInsertSchema(players);
-export const insertEventSchema = createInsertSchema(events);
+export type SelectParticipant = typeof participants.$inferSelect;
 export const insertParticipantSchema = createInsertSchema(participants);
-export const insertSkillsSetSchema = createInsertSchema(skillsSet);
+export async function updateParticipantTeam(
+  participantId: number,
+  team: string
+) {
+  await db
+    .update(participants)
+    .set({ team })
+    .where(eq(participants.id, participantId));
+}
+export async function getParticipantsForEvent(
+  eventId: number
+): Promise<
+  (SelectParticipant & {
+    player: SelectPlayer;
+    skills: SelectSkillsSet | null;
+  })[]
+> {
+  const participantRecords = await db
+    .select()
+    .from(participants)
+    .where(eq(participants.eventId, eventId));
+
+  const participantsWithDetails = await Promise.all(
+    participantRecords.map(async (participant) => {
+      const player = await db
+        .select()
+        .from(players)
+        .where(eq(players.id, participant.playerId))
+        .limit(1);
+      const skills = await db
+        .select()
+        .from(skillsSet)
+        .where(eq(skillsSet.playerId, participant.playerId))
+        .limit(1);
+
+      return {
+        ...participant,
+        player: player[0],
+        skills: skills[0] || null
+      };
+    })
+  );
+
+  return participantsWithDetails;
+}

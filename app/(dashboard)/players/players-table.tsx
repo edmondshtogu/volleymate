@@ -15,23 +15,23 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
-import { Product } from './product';
-import { SelectProduct } from '@/lib/db';
+import { Player } from './player';
+import { SelectPlayer } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export function ProductsTable({
-  products,
+export function PlayersTable({
+  players,
   offset,
-  totalProducts
+  totalPlayers
 }: {
-  products: SelectProduct[];
+  players: SelectPlayer[];
   offset: number;
-  totalProducts: number;
+  totalPlayers: number;
 }) {
   let router = useRouter();
-  let productsPerPage = 5;
+  let playersPerPage = 5;
 
   function prevPage() {
     router.back();
@@ -44,33 +44,24 @@ export function ProductsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Products</CardTitle>
-        <CardDescription>
-          Manage your products and view their sales performance.
-        </CardDescription>
+        <CardTitle>Players</CardTitle>
+        <CardDescription>Volleyboll players.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="hidden w-[100px] sm:table-cell">
-                <span className="sr-only">Image</span>
-              </TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden md:table-cell">Price</TableHead>
-              <TableHead className="hidden md:table-cell">
-                Total Sales
-              </TableHead>
-              <TableHead className="hidden md:table-cell">Created at</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => (
-              <Product key={product.id} product={product} />
+            {players.map((player) => (
+              <Player key={player.id} player={player} />
             ))}
           </TableBody>
         </Table>
@@ -80,9 +71,10 @@ export function ProductsTable({
           <div className="text-xs text-muted-foreground">
             Showing{' '}
             <strong>
-              {Math.max(0, Math.min(offset - productsPerPage, totalProducts) + 1)}-{offset}
+              {Math.max(0, Math.min(offset - playersPerPage, totalPlayers) + 1)}
+              -{offset}
             </strong>{' '}
-            of <strong>{totalProducts}</strong> products
+            of <strong>{totalPlayers}</strong> players
           </div>
           <div className="flex">
             <Button
@@ -90,7 +82,7 @@ export function ProductsTable({
               variant="ghost"
               size="sm"
               type="submit"
-              disabled={offset === productsPerPage}
+              disabled={offset === playersPerPage}
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
               Prev
@@ -100,7 +92,7 @@ export function ProductsTable({
               variant="ghost"
               size="sm"
               type="submit"
-              disabled={offset + productsPerPage > totalProducts}
+              disabled={offset + playersPerPage > totalPlayers}
             >
               Next
               <ChevronRight className="ml-2 h-4 w-4" />

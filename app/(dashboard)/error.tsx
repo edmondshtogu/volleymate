@@ -10,36 +10,41 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    // Log the error to an error reporting service (e.g., Sentry, LogRocket)
+    console.error('An error occurred:', error);
   }, [error]);
 
   return (
     <main className="p-4 md:p-6">
       <div className="mb-8 space-y-4">
         <h1 className="font-semibold text-lg md:text-2xl">
-          Please complete setup
+          Something went wrong
         </h1>
         <p>
-          Inside the Vercel Postgres dashboard, create a table based on the
-          schema defined in this repository.
+          There was an error while loading the page. Please review the details
+          below to troubleshoot the issue.
         </p>
-        <pre className="my-4 px-3 py-4 bg-black text-white rounded-lg max-w-2xl overflow-scroll flex text-wrap">
-          <code>
-            {`CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) NOT NULL,
-  name VARCHAR(255),
-  username VARCHAR(255)
-);`}
-          </code>
-        </pre>
-        <p>Insert a row for testing:</p>
-        <pre className="my-4 px-3 py-4 bg-black text-white rounded-lg max-w-2xl overflow-scroll flex text-wrap">
-          <code>
-            {`INSERT INTO users (id, email, name, username) VALUES (1, 'me@site.com', 'Me', 'username');`}
-          </code>
-        </pre>
+
+        <div className="space-y-2">
+          <h2 className="font-semibold text-md">Error Details</h2>
+          <p>
+            <strong>Message:</strong> {error.message}
+          </p>
+          {error.stack && (
+            <div>
+              <strong>Stack Trace:</strong>
+              <pre className="my-4 px-3 py-4 bg-black text-white rounded-lg max-w-2xl overflow-scroll text-sm">
+                <code>{error.stack}</code>
+              </pre>
+            </div>
+          )}
+          {error.digest && (
+            <div>
+              <strong>Request Digest:</strong>
+              <p>{error.digest}</p>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

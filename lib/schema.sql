@@ -7,6 +7,7 @@ CREATE TYPE skill_scale AS ENUM (
 CREATE TABLE players (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
+  email TEXT NOT NULL,
   configured BOOLEAN NOT NULL DEFAULT FALSE
 );
 
