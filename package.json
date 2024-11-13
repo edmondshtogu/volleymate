@@ -1,5 +1,5 @@
 {
-  "name": "volleyball-bot",
+  "name": "volleymate",
   "version": "0.1.0",
   "description": "A WhatsApp bot for organizing volleyball games.",
   "author": "edmondshtogu@gmail.com",
@@ -16,7 +16,7 @@
     "start": "next start",
     "lint": "next lint",
     "pull-env": "vercel env pull .env.development.local",
-    "migrate": "ts-node/register -r dotenv/config ./scripts/migrate.ts"
+    "start:postgres": "docker run --rm --name volleymate-db -p ${POSTGRES_PORT:-5432}:5432 --env-file .env -d postgres:latest"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.4",
