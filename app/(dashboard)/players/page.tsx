@@ -22,18 +22,10 @@ export default async function PlayersPage(
     Number(offset)
   );
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Players</CardTitle>
-        <CardDescription>View all players and their orders.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <PlayersTable
-          players={players}
-          offset={newOffset ?? 0}
-          totalPlayers={totalPlayers}
-        />
-      </CardContent>
-    </Card>
+    <PlayersTable
+      players={players}
+      offset={newOffset ?? 0}
+      totalPlayers={totalPlayers}
+    />
   );
 }

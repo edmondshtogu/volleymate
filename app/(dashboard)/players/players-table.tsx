@@ -45,7 +45,7 @@ export function PlayersTable({
     <Card>
       <CardHeader>
         <CardTitle>Players</CardTitle>
-        <CardDescription>Volleyboll players.</CardDescription>
+        <CardDescription>View all registered players.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
