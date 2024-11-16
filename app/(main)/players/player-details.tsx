@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SelectPlayer, SelectSkillsSet } from '@/lib/db';
@@ -26,6 +27,7 @@ export function PlayerDetails({
 }: {
   player: PlayerWithSkills;
 }) {
+  const { user } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
 
@@ -104,7 +106,7 @@ export function PlayerDetails({
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{currentPlayer.name}</CardTitle>
-        <Button onClick={() => setIsEditing(!isEditing)}>
+        <Button hidden={user?.sub !== currentPlayer.userId} onClick={() => setIsEditing(!isEditing)}>
           {isEditing ? 'Cancel' : 'Edit Skills'}
         </Button>
       </CardHeader>
