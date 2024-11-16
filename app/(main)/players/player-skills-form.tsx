@@ -29,6 +29,41 @@ const ratingMap: Record<SelectSkillsSet[keyof SelectSkillsSet], string> = {
   '10': 'Elite'
 };
 
+// Map skill names to their descriptions
+const skillDescriptions: Record<SkillKey, string> = {
+  servingConsistency: 'Ability to consistently serve the ball with accuracy.',
+  servingPower: 'Power behind the serve, affecting speed and trajectory.',
+  servingAccuracy: 'Ability to place the serve precisely in the right zone.',
+  passingControl:
+    'Control over the ball during passing, ensuring proper setup.',
+  passingPositioning: 'Proper positioning for effective passing.',
+  passingFirstContact:
+    'Quality of the first contact with the ball during passing.',
+  settingAccuracy: 'Precision in setting up teammates for an attack.',
+  settingDecisionMaking:
+    'Ability to choose the right set for different situations.',
+  settingConsistency: 'Reliability in setting accurate and successful passes.',
+  hittingSpikingPower: 'Power and force in spiking the ball.',
+  hittingSpikingPlacement: 'Placing the ball effectively during spikes.',
+  hittingSpikingTiming: 'Timing of the attack to catch the opponent off guard.',
+  blockingTiming: 'Precision in timing jumps for blocking.',
+  blockingPositioning: 'Positioning for an effective block against attacks.',
+  blockingReadingAttacks:
+    'Ability to read and predict the opponent’s attack patterns.',
+  defenseReactionTime: 'Quick reaction to the ball in defense.',
+  defenseFootwork: 'Proper foot movement for effective defense positioning.',
+  defenseBallControl: 'Ability to control the ball during defensive actions.',
+  teamPlayCommunication:
+    'Effective communication and coordination with teammates.',
+  teamPlayPositionalAwareness:
+    'Understanding of teammates’ positions and movements.',
+  teamPlayAdaptability: 'Ability to adapt to changes during team play.',
+  athleticismSpeedAgility: 'Quickness and agility in movement on the court.',
+  athleticismVerticalJump: 'Jumping ability, crucial for blocking and spiking.',
+  athleticismStamina:
+    'Endurance to maintain peak performance throughout the game.'
+};
+
 type SkillKey = keyof Omit<SelectSkillsSet, 'id' | 'playerId'>;
 
 export function PlayerSkillsForm({
@@ -49,7 +84,14 @@ export function PlayerSkillsForm({
     e.preventDefault();
     setIsSaving(true);
     try {
-      await onSave(skills);
+      // Ensure that all skills with null or undefined values are set to '1'
+      const updatedSkills = Object.keys(skills).reduce((acc, key) => {
+        const skillKey = key as SkillKey;
+        acc[skillKey] = skills[skillKey] || '1'; // Set to '1' if not set
+        return acc;
+      }, {} as SelectSkillsSet);
+
+      await onSave(updatedSkills);
     } catch (error) {
       console.error('Error saving skills:', error);
       // Handle error (e.g., show an error message to the user)
@@ -159,6 +201,9 @@ export function PlayerSkillsForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {skillDescriptions[skill as SkillKey]}
+                  </p>
                 </div>
               ))}
             </div>
