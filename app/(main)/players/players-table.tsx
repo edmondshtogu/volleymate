@@ -31,7 +31,7 @@ export function PlayersTable({
   totalPlayers: number;
 }) {
   let router = useRouter();
-  let playersPerPage = 5;
+  let playersPerPage = 10;
 
   function prevPage() {
     router.back();
