@@ -1,4 +1,10 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription
+} from '@/components/ui/card';
 import { SelectParticipant, SelectPlayer, SelectSkillsSet } from '@/lib/db';
 
 type ParticipantData = SelectParticipant & {
@@ -37,10 +43,22 @@ function calculateTotalSkills(skills: SelectSkillsSet | null): number {
   ];
 
   return Object.values(skillDimensions).reduce((total, skill) => {
-    // Convert skill value to a number before adding it
     const value: number = typeof skill === 'string' ? parseInt(skill, 10) : 0;
     return total + value;
   }, 0);
+}
+
+// Calculate the total score for a team
+function calculateTeamScore(team: ParticipantData[]): number {
+  return team.reduce((total, participant) => {
+    return total + calculateTotalSkills(participant.skills);
+  }, 0);
+}
+
+// Calculate the maximum possible score for a team
+function calculateMaxTeamScore(teamSize: number): number {
+  const maxScorePerPlayer = 24 * 10; // 24 skills, 10 max points per skill
+  return teamSize * maxScorePerPlayer;
 }
 
 export function ParticipantsList({
@@ -52,18 +70,19 @@ export function ParticipantsList({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>No data!</CardTitle>
+          <CardTitle>Participants</CardTitle>
         </CardHeader>
+        <CardContent>
+          <CardDescription>No data!</CardDescription>
+        </CardContent>
       </Card>
     );
   }
 
-  // Sort participants by total skills descending
   const sortedParticipants = [...participants].sort(
     (a, b) => calculateTotalSkills(b.skills) - calculateTotalSkills(a.skills)
   );
 
-  // Form teams
   const teams: { [key: string]: ParticipantData[] } = {};
   const teamSizeRange = { min: 3, max: 5 };
   let currentTeam = 1;
@@ -77,13 +96,11 @@ export function ParticipantsList({
 
     teams[teamKey].push(participant);
 
-    // Move to the next team if the current one reaches max size
     if (teams[teamKey].length >= teamSizeRange.max) {
       currentTeam++;
     }
   });
 
-  // Adjust team balance if needed (ensure min size)
   Object.keys(teams).forEach((teamKey) => {
     if (teams[teamKey].length < teamSizeRange.min) {
       const nextTeamKey = `Team ${currentTeam + 1}`;
@@ -104,20 +121,33 @@ export function ParticipantsList({
         <CardTitle>Participants</CardTitle>
       </CardHeader>
       <CardContent>
-        {Object.entries(teams).map(([teamName, teamPlayers]) => (
-          <Card>
-            <CardHeader>
-              <CardTitle>{teamName}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul>
-                {teamPlayers.map((participant) => (
-                  <li key={participant.id}>{participant.player.name}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex flex-row flex-wrap gap-4">
+          {Object.entries(teams).map(([teamName, teamPlayers]) => {
+            const teamScore = calculateTeamScore(teamPlayers); // Get the team score
+            const maxTeamScore = calculateMaxTeamScore(teamPlayers.length); // Get the max possible team score
+            const teamPercentage = (teamScore / maxTeamScore) * 100; // Calculate the percentage score
+
+            return (
+              <Card key={teamName} className="w-full max-w-[250px] flex-grow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{teamName}</CardTitle>
+                  <CardDescription>
+                    Team skills score: {teamPercentage.toFixed(1)} / 100%
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc list-inside">
+                    {teamPlayers.map((participant) => (
+                      <li key={participant.id} className="text-sm">
+                        {participant.player.name}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
