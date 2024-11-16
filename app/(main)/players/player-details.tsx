@@ -22,11 +22,7 @@ const ratingMap: Record<string, string> = {
   '10': 'Elite'
 };
 
-export function PlayerDetails({
-  player
-}: {
-  player: PlayerWithSkills;
-}) {
+export function PlayerDetails({ player }: { player: PlayerWithSkills }) {
   const { user } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
@@ -106,7 +102,10 @@ export function PlayerDetails({
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{currentPlayer.name}</CardTitle>
-        <Button disabled={user?.sub !== currentPlayer.userId} onClick={() => setIsEditing(!isEditing)}>
+        <Button
+          disabled={user?.sub !== currentPlayer.userId}
+          onClick={() => setIsEditing(!isEditing)}
+        >
           {isEditing ? 'Cancel' : 'Edit Skills'}
         </Button>
       </CardHeader>
@@ -122,14 +121,16 @@ export function PlayerDetails({
             {skillCategories.map((category) => (
               <Card key={category.title}>
                 <CardHeader>
-                  <CardTitle className="text-lg">{category.title}</CardTitle>
+                  <CardTitle className="text-lg">
+                    <u>{category.title}</u>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     {category.skills.map((skill) => (
                       <li key={skill} className="flex justify-between">
                         <span className="capitalize">
-                          {skill.replace(/([A-Z])/g, ' $1').trim()}
+                          <b>{skill.replace(/([A-Z])/g, ' $1').trim()}</b>
                         </span>
                         <span>
                           {currentPlayer.skills &&

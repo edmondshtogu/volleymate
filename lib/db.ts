@@ -154,6 +154,15 @@ export async function getPlayers(
 export async function deletePlayerById(id: number) {
   await db.delete(players).where(eq(players.id, id));
 }
+export async function isPlayerConfigured(id: number): Promise<boolean> {
+  const player = await db
+    .select()
+    .from(players)
+    .where(eq(players.id, id))
+    .limit(1);
+
+  return player[0].configured;
+}
 
 // Event Table
 export const events = pgTable('events', {
