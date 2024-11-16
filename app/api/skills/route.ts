@@ -1,11 +1,18 @@
-import { withApiAuthRequired } from '@auth0/nextjs-auth0';
 import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@auth0/nextjs-auth0';
 import { db, SelectSkillsSet, skillsSet, players } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 
-export const POST = withApiAuthRequired(async function post(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    console.log(JSON.stringify(req))
+    const session = await getSession();
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { playerId, skills }: { playerId: number; skills: SelectSkillsSet } =
       await req.json();
 
@@ -34,9 +41,10 @@ export const POST = withApiAuthRequired(async function post(req: NextRequest) {
       .where(eq(players.id, playerId))
       .limit(1);
 
-    player[0].configured = true;
-
-    await db.update(players).set(player[0]).where(eq(players.id, playerId));
+    if (player.length > 0) {
+      player[0].configured = true;
+      await db.update(players).set(player[0]).where(eq(players.id, playerId));
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -46,4 +54,4 @@ export const POST = withApiAuthRequired(async function post(req: NextRequest) {
       { status: 500 }
     );
   }
-});
+}

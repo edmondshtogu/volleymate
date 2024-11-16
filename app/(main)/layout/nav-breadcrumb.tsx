@@ -38,9 +38,17 @@ export default function BreadcrumbNav() {
           <>
             <BreadcrumbSeparator key={`separator-${index + 1}`} />
             <BreadcrumbItem key={`item-${index + 1}`}>
-              <BreadcrumbPage>
-                {page.charAt(0).toUpperCase() + page.slice(1)}
-              </BreadcrumbPage>
+              {pages.length < index + 1 ? (
+                <BreadcrumbLink>
+                  <Link href={`/${page}`}>
+                    {page.charAt(0).toUpperCase() + page.slice(1)}
+                  </Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>
+                  {page.charAt(0).toUpperCase() + page.slice(1)}
+                </BreadcrumbPage>
+              )}
             </BreadcrumbItem>
           </>
         ))}

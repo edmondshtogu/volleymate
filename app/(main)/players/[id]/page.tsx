@@ -2,22 +2,21 @@ import { getPlayerById } from '@/lib/db';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import PageError from './../../error';
 import { PlayerDetails } from '../player-details';
 
 export default async function PlayerPage({
   params
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const player = await getPlayerById(parseInt(params.id, 10));
+  const player = await getPlayerById(parseInt((await params).id, 10));
 
   if (!player) {
-    return <div>Player not found</div>;
+    return <PageError error={Error("Player not found!")}></PageError>;
   }
 
   return (
