@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
-import { db, SelectSkillsSet, skillsSet, players } from '@/lib/db';
+import {
+  db,
+  insertSkillsSetSchema,
+  SelectSkillsSet,
+  skillsSet,
+  players
+} from '@/lib/db';
 import { eq } from 'drizzle-orm';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -31,7 +37,42 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         .where(eq(skillsSet.playerId, playerId));
     } else {
       // Insert new skills
-      await db.insert(skillsSet).values({ ...skills, playerId });
+      const values = insertSkillsSetSchema.parse({
+        playerId,
+        // Serving Skills
+        servingConsistency: skills.servingConsistency ?? '1',
+        servingPower: skills.servingPower ?? '1',
+        servingAccuracy: skills.servingAccuracy ?? '1',
+        // Passing Skills
+        passingControl: skills.passingControl ?? '1',
+        passingPositioning: skills.passingPositioning ?? '1',
+        passingFirstContact: skills.passingFirstContact ?? '1',
+        // Setting Skills
+        settingAccuracy: skills.settingAccuracy ?? '1',
+        settingDecisionMaking: skills.settingDecisionMaking ?? '1',
+        settingConsistency: skills.settingConsistency ?? '1',
+        // Hitting/Spiking Skills
+        hittingSpikingPower: skills.hittingSpikingPower ?? '1',
+        hittingSpikingPlacement: skills.hittingSpikingPlacement ?? '1',
+        hittingSpikingTiming: skills.hittingSpikingTiming ?? '1',
+        // Blocking Skills
+        blockingTiming: skills.blockingTiming ?? '1',
+        blockingPositioning: skills.blockingPositioning ?? '1',
+        blockingReadingAttacks: skills.blockingReadingAttacks ?? '1',
+        // Defense/Digging Skills
+        defenseReactionTime: skills.defenseReactionTime ?? '1',
+        defenseFootwork: skills.defenseFootwork ?? '1',
+        defenseBallControl: skills.defenseBallControl ?? '1',
+        // Team Play Skills
+        teamPlayCommunication: skills.teamPlayCommunication ?? '1',
+        teamPlayPositionalAwareness: skills.teamPlayPositionalAwareness ?? '1',
+        teamPlayAdaptability: skills.teamPlayAdaptability ?? '1',
+        // Athleticism Skills
+        athleticismSpeedAgility: skills.athleticismSpeedAgility ?? '1',
+        athleticismVerticalJump: skills.athleticismVerticalJump ?? '1',
+        athleticismStamina: skills.athleticismStamina ?? '1'
+      });
+      await db.insert(skillsSet).values(values);
     }
 
     // Update player's "configured" status
