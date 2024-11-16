@@ -246,18 +246,21 @@ export async function insertParticipant(
   await db.insert(participants).values(participant);
 }
 export async function updateParticipantWithdrawal(
-  participantId: number,
   eventId: number,
-  withdrawalDate: Date
+  playerId: number,
+  withdrawalDate: Date | null
 ): Promise<void> {
   await db
     .update(participants)
     .set({ withdrewAt: withdrawalDate })
     .where(
-      and(eq(participants.eventId, eventId), eq(participants.id, participantId))
+      and(
+        eq(participants.eventId, eventId),
+        eq(participants.playerId, playerId)
+      )
     );
 }
-export async function getParticipant(eventId: number, playerId: number) {
+export async function getParticipant(eventId: number, playerId: number): Promise<SelectParticipant | null> {
   const participant = await db
     .select()
     .from(participants)
@@ -268,6 +271,10 @@ export async function getParticipant(eventId: number, playerId: number) {
       )
     )
     .limit(1);
+
+  if (participant.length < 1){
+    return null;
+  }
 
   return participant[0];
 }

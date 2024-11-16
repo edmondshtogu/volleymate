@@ -4,6 +4,7 @@ import {
   insertParticipant,
   insertParticipantSchema,
   updateParticipantWithdrawal,
+  getParticipant,
   isPlayerConfigured
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
@@ -18,19 +19,22 @@ export async function joinEvent(eventId: number, playerId: number) {
     redirect('/settings');
   }
 
-  const newParticipant = {
-    eventId,
-    playerId,
-    withdrewAt: null
-  };
+  const existing = await getParticipant(eventId, playerId);
+  if (existing) {
+    await updateParticipantWithdrawal(eventId, playerId, null);
+  } else {
+    const validatedParticipant = insertParticipantSchema.parse({
+      eventId,
+      playerId,
+      withdrewAt: null
+    });
+    await insertParticipant(validatedParticipant);
+  }
 
-  const validatedParticipant = insertParticipantSchema.parse(newParticipant);
-
-  await insertParticipant(validatedParticipant);
   revalidatePath('/');
-};
+}
 
 export async function leaveEvent(eventId: number, playerId: number) {
-  await updateParticipantWithdrawal(playerId, eventId, new Date());
+  await updateParticipantWithdrawal(eventId, playerId, new Date());
   revalidatePath('/');
 }

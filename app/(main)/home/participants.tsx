@@ -139,7 +139,14 @@ export function ParticipantsList({
                   <ul className="list-disc list-inside">
                     {teamPlayers.map((participant) => (
                       <li key={participant.id} className="text-sm">
-                        {participant.player.name}
+                        {participant.withdrewAt ? (
+                          <>
+                            <s>{participant.player.name}</s>
+                            ({participant.withdrewAt?.toLocaleDateString()})
+                          </>
+                        ) : (
+                          participant.player.name
+                        )}
                       </li>
                     ))}
                   </ul>
