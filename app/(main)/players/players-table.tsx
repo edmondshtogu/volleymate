@@ -51,12 +51,9 @@ export function PlayersTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
+              <TableHead className="w-[80%]">Name</TableHead>
+              <TableHead className="w-[15%]">Status</TableHead>
+              <TableHead className="w-[5%] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
 import { getPlayers } from '@/lib/db';
 import { PlayersTable } from './players-table';
 

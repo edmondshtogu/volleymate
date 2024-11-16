@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { retainTop2Events } from "@/lib/db"
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // await repository.deleteMatchPlayers();
+    await retainTop2Events();
 
     return Response.json({ success: true });
   } catch (error) {

@@ -1,6 +1,7 @@
 import './globals.css';
 
 import { Analytics } from '@vercel/analytics/react';
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 
 export const metadata = {
   title: "VolleyMate",
@@ -14,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen w-full flex-col">{children}</body>
+      <UserProvider>
+        <body className="flex min-h-screen w-full flex-col">{children}</body>
+      </UserProvider>
       <Analytics />
     </html>
   );

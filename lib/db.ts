@@ -5,7 +5,6 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import {
   pgTable,
   text,
-  numeric,
   integer,
   timestamp,
   serial,
@@ -82,8 +81,8 @@ export const insertSkillsSetSchema = createInsertSchema(skillsSet);
 // Player Table
 export const players = pgTable('players', {
   id: serial('id').primaryKey(),
+  userId: text('userid').notNull(),
   name: text('name').notNull(),
-  email: text('email').notNull(), // New email column
   configured: boolean('configured').notNull()
 });
 export type SelectPlayer = typeof players.$inferSelect;
@@ -101,7 +100,7 @@ export async function getPlayerById(
       ? await db
           .select()
           .from(skillsSet)
-          .where(eq(skillsSet.playerId, id))
+          .where(eq(skillsSet.playerId, player[0].id))
           .limit(1)
       : null;
   return { ...player[0], skills: skills ? skills[0] : null };
