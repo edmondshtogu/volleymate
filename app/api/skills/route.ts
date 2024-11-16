@@ -31,7 +31,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         .where(eq(skillsSet.playerId, playerId));
     } else {
       // Insert new skills
-      await db.insert(skillsSet).values({ ...skills });
+      await db.insert(skillsSet).values({ ...skills, playerId });
     }
 
     // Update player's "configured" status
