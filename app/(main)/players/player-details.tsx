@@ -106,7 +106,7 @@ export function PlayerDetails({
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{currentPlayer.name}</CardTitle>
-        <Button hidden={user?.sub !== currentPlayer.userId} onClick={() => setIsEditing(!isEditing)}>
+        <Button disabled={user?.sub !== currentPlayer.userId} onClick={() => setIsEditing(!isEditing)}>
           {isEditing ? 'Cancel' : 'Edit Skills'}
         </Button>
       </CardHeader>

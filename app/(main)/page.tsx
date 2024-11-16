@@ -1,33 +1,67 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { cookies } from 'next/headers';
+import { getEvents, getParticipantsForEvent } from '@/lib/db';
+import { EventDetails } from './home/event';
+import { ParticipantsList } from './home/participants';
+import { InteractiveButtons } from './home/interactive-buttons';
+import PageError from './error';
 
-export default async function ProductsPage(
-  props: {
-    searchParams: Promise<{ q: string; offset: string }>;
+export default async function Page() {
+  const cookieStore = await cookies();
+  if (!cookieStore.get('id')?.value && !cookieStore.get('configured')?.value) {
+    return <PageError error={Error('Player not found!')}></PageError>;
   }
-) {
-  const searchParams = await props.searchParams;
+  const userId = Number(cookieStore.get('id')!.value);
+  const isConfigured = Boolean(cookieStore.get('configured')!.value);
+
+  const events = await getEvents();
+  const [currentEvent, lastWeekEvent] = await Promise.all(
+    events.slice(0, 2).map(async (event) => ({
+      event,
+      participants: await getParticipantsForEvent(event.id)
+    }))
+  );
+
+  const isParticipating = currentEvent?.participants.some(
+    (p) => p.playerId === userId && !p.withdrewAt
+  );
 
   return (
-    <Tabs defaultValue="all">
-      <div className="flex items-center">
+    <Tabs defaultValue="current">
+      <div className="flex items-center mb-4">
         <TabsList>
-          <TabsTrigger value="all">Current</TabsTrigger>
-          <TabsTrigger value="active">Last Week</TabsTrigger>
+          <TabsTrigger value="current">Current</TabsTrigger>
+          {events.length > 1 ? (
+            <TabsTrigger value="lastWeek">Last Week</TabsTrigger>
+          ) : null}
         </TabsList>
-        <div className="ml-auto flex items-center gap-2">
-          <Button size="sm" className="h-8 gap-1">
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Join
-            </span>
-          </Button>
-        </div>
+        {currentEvent && (
+          <InteractiveButtons
+            eventId={currentEvent.event.id}
+            currentUserId={userId}
+            isParticipating={isParticipating}
+            isConfigured={isConfigured}
+          />
+        )}
       </div>
-      <TabsContent value="all">
-        TODO
+      <TabsContent value="current">
+        <div className="space-y-4">
+          <EventDetails event={currentEvent.event}></EventDetails>
+          <ParticipantsList
+            participants={currentEvent.participants}
+          ></ParticipantsList>
+        </div>
       </TabsContent>
+      {lastWeekEvent ? (
+        <TabsContent value="lastWeek">
+          <div className="space-y-4">
+            <EventDetails event={lastWeekEvent.event}></EventDetails>
+            <ParticipantsList
+              participants={lastWeekEvent.participants}
+            ></ParticipantsList>
+          </div>
+        </TabsContent>
+      ) : null}
     </Tabs>
   );
 }

@@ -31,22 +31,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         .where(eq(skillsSet.playerId, playerId));
     } else {
       // Insert new skills
-      skills.playerId = playerId;
       await db.insert(skillsSet).values({ ...skills });
     }
 
-    const player = await db
-      .select()
-      .from(players)
-      .where(eq(players.id, playerId))
-      .limit(1);
+    // Update player's "configured" status
+    await db
+      .update(players)
+      .set({ configured: true })
+      .where(eq(players.id, playerId));
 
-    if (player.length > 0) {
-      player[0].configured = true;
-      await db.update(players).set(player[0]).where(eq(players.id, playerId));
-    }
-
-    return NextResponse.json({ success: true });
+    // Set "configured" cookie
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('configured', 'true', { path: '/' });
+    return response;
   } catch (error) {
     console.error('Error saving skills:', error);
     return NextResponse.json(

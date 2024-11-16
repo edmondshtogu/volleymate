@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -11,6 +12,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { SelectPlayer, SelectSkillsSet } from '@/lib/db';
+import { Loader2 } from 'lucide-react';
 
 type PlayerWithSkills = SelectPlayer & { skills: SelectSkillsSet | null };
 
@@ -35,16 +37,25 @@ export function PlayerSkillsForm({
   onCancel
 }: {
   player: PlayerWithSkills;
-  onSave: (skills: SelectSkillsSet) => void;
+  onSave: (skills: SelectSkillsSet) => Promise<void>;
   onCancel: () => void;
 }) {
   const [skills, setSkills] = useState<SelectSkillsSet>(
     player.skills || ({} as SelectSkillsSet)
   );
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(skills);
+    setIsSaving(true);
+    try {
+      await onSave(skills);
+    } catch (error) {
+      console.error('Error saving skills:', error);
+      // Handle error (e.g., show an error message to the user)
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSkillChange = (
@@ -119,12 +130,12 @@ export function PlayerSkillsForm({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {category.skills.map((skill) => (
                 <div key={skill}>
-                  <label
+                  <Label
                     htmlFor={skill}
                     className="block text-sm font-medium text-gray-700 capitalize mb-1"
                   >
                     {skill.replace(/([A-Z])/g, ' $1').trim()}
-                  </label>
+                  </Label>
                   <Select
                     value={skills[skill as SkillKey] || '1'}
                     onValueChange={(value) =>
@@ -133,6 +144,7 @@ export function PlayerSkillsForm({
                         value as SelectSkillsSet[SkillKey]
                       )
                     }
+                    disabled={isSaving}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select rating" />
@@ -154,10 +166,24 @@ export function PlayerSkillsForm({
         </Card>
       ))}
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSaving}
+        >
           Cancel
         </Button>
-        <Button type="submit">Save Changes</Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
       </div>
     </form>
   );

@@ -11,7 +11,7 @@ import {
   boolean,
   pgEnum
 } from 'drizzle-orm/pg-core';
-import { count, desc, eq, ilike, notInArray } from 'drizzle-orm';
+import { count, desc, eq, and, ilike, notInArray } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
@@ -33,7 +33,9 @@ const skillScaleEnum = pgEnum('skill_scale', [
 // SkillsSet Table
 export const skillsSet = pgTable('skills_set', {
   id: serial('id').primaryKey(),
-  playerId: integer('player_id').references(() => players.id).notNull(),
+  playerId: integer('player_id')
+    .references(() => players.id)
+    .notNull(),
 
   // Serving Skills
   servingConsistency: skillScaleEnum('serving_consistency').notNull(),
@@ -52,7 +54,9 @@ export const skillsSet = pgTable('skills_set', {
 
   // Hitting/Spiking Skills
   hittingSpikingPower: skillScaleEnum('hitting_spiking_power').notNull(),
-  hittingSpikingPlacement: skillScaleEnum('hitting_spiking_placement').notNull(),
+  hittingSpikingPlacement: skillScaleEnum(
+    'hitting_spiking_placement'
+  ).notNull(),
   hittingSpikingTiming: skillScaleEnum('hitting_spiking_timing').notNull(),
 
   // Blocking Skills
@@ -67,13 +71,19 @@ export const skillsSet = pgTable('skills_set', {
 
   // Team Play Skills
   teamPlayCommunication: skillScaleEnum('team_play_communication').notNull(),
-  teamPlayPositionalAwareness: skillScaleEnum('team_play_positional_awareness').notNull(),
+  teamPlayPositionalAwareness: skillScaleEnum(
+    'team_play_positional_awareness'
+  ).notNull(),
   teamPlayAdaptability: skillScaleEnum('team_play_adaptability').notNull(),
 
   // Athleticism Skills
-  athleticismSpeedAgility: skillScaleEnum('athleticism_speed_agility').notNull(),
-  athleticismVerticalJump: skillScaleEnum('athleticism_vertical_jump').notNull(),
-  athleticismStamina: skillScaleEnum('athleticism_stamina').notNull(),
+  athleticismSpeedAgility: skillScaleEnum(
+    'athleticism_speed_agility'
+  ).notNull(),
+  athleticismVerticalJump: skillScaleEnum(
+    'athleticism_vertical_jump'
+  ).notNull(),
+  athleticismStamina: skillScaleEnum('athleticism_stamina').notNull()
 });
 export type SelectSkillsSet = typeof skillsSet.$inferSelect;
 export const insertSkillsSetSchema = createInsertSchema(skillsSet);
@@ -95,6 +105,7 @@ export async function getPlayerById(
     .from(players)
     .where(eq(players.id, id))
     .limit(1);
+
   const skills =
     player.length > 0
       ? await db
@@ -149,7 +160,7 @@ export const events = pgTable('events', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   location: text('location').notNull(),
-  date: timestamp('date').notNull(),
+  date: timestamp('date').notNull()
 });
 export type SelectEvent = typeof events.$inferSelect;
 export const insertEventSchema = createInsertSchema(events);
@@ -176,25 +187,17 @@ export async function retainTop2Events() {
 // Participant Table
 export const participants = pgTable('participants', {
   id: serial('id').primaryKey(),
-  eventId: integer('event_id').references(() => events.id).notNull(),
-  playerId: integer('player_id').references(() => players.id).notNull(),
-  team: text('team').notNull(),
-  withdrewAt: timestamp('withdrew_at'),
+  eventId: integer('event_id')
+    .references(() => events.id)
+    .notNull(),
+  playerId: integer('player_id')
+    .references(() => players.id)
+    .notNull(),
+  withdrewAt: timestamp('withdrew_at')
 });
 export type SelectParticipant = typeof participants.$inferSelect;
 export const insertParticipantSchema = createInsertSchema(participants);
-export async function updateParticipantTeam(
-  participantId: number,
-  team: string
-) {
-  await db
-    .update(participants)
-    .set({ team })
-    .where(eq(participants.id, participantId));
-}
-export async function getParticipantsForEvent(
-  eventId: number
-): Promise<
+export async function getParticipantsForEvent(eventId: number): Promise<
   (SelectParticipant & {
     player: SelectPlayer;
     skills: SelectSkillsSet | null;
@@ -227,4 +230,35 @@ export async function getParticipantsForEvent(
   );
 
   return participantsWithDetails;
+}
+export async function insertParticipant(
+  participant: typeof insertParticipantSchema._type
+): Promise<void> {
+  await db.insert(participants).values(participant);
+}
+export async function updateParticipantWithdrawal(
+  participantId: number,
+  eventId: number,
+  withdrawalDate: Date
+): Promise<void> {
+  await db
+    .update(participants)
+    .set({ withdrewAt: withdrawalDate })
+    .where(
+      and(eq(participants.eventId, eventId), eq(participants.id, participantId))
+    );
+}
+export async function getParticipant(eventId: number, playerId: number) {
+  const participant = await db
+    .select()
+    .from(participants)
+    .where(
+      and(
+        eq(participants.eventId, eventId),
+        eq(participants.playerId, playerId)
+      )
+    )
+    .limit(1);
+
+  return participant[0];
 }

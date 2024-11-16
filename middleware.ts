@@ -34,9 +34,9 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
     const result = await db.insert(players).values(newPlayer).returning();
     player = result;
   }
-  res.cookies.set('id', player[0].id.toString());
+  res.cookies.set('id', player[0].id.toString(), { path: '/' });
   req.cookies.set('id', player[0].id.toString());
-  res.cookies.set('configured', player[0].configured.toString());
+  res.cookies.set('configured', player[0].configured.toString(), { path: '/' });
   req.cookies.set('configured', player[0].configured.toString());
   
   return res;

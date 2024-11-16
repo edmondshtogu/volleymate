@@ -13,7 +13,7 @@ export default async function PlayerPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const player = await getPlayerById(parseInt((await params).id, 10));
+  const player = await getPlayerById(Number((await params).id));
 
   if (!player) {
     return <PageError error={Error("Player not found!")}></PageError>;
