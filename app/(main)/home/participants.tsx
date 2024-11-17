@@ -48,17 +48,55 @@ function calculateTotalSkills(skills: SelectSkillsSet | null): number {
   }, 0);
 }
 
-// Calculate the total score for a team
-function calculateTeamScore(team: ParticipantData[]): number {
-  return team.reduce((total, participant) => {
-    return total + calculateTotalSkills(participant.skills);
-  }, 0);
-}
+function balanceTeams(
+  participants: ParticipantData[],
+  numTeams: number
+): ParticipantData[][] {
+  const teams: ParticipantData[][] = Array.from({ length: numTeams }, () => []);
 
-// Calculate the maximum possible score for a team
-function calculateMaxTeamScore(teamSize: number): number {
-  const maxScorePerPlayer = 24 * 10; // 24 skills, 10 max points per skill
-  return teamSize * maxScorePerPlayer;
+  // Sort participants by skills descending
+  const sortedParticipants = [...participants].sort(
+    (a, b) => calculateTotalSkills(b.skills) - calculateTotalSkills(a.skills)
+  );
+
+  // Distribute participants to ensure a minimum team size of 3
+  sortedParticipants.forEach((participant, index) => {
+    teams[index % numTeams].push(participant);
+  });
+
+  // Rebalance teams to minimize skill variance
+  let redistributed = true;
+  while (redistributed) {
+    redistributed = false;
+
+    for (let i = 0; i < numTeams - 1; i++) {
+      const team1 = teams[i];
+      const team2 = teams[i + 1];
+
+      const team1Score = team1.reduce(
+        (total, p) => total + calculateTotalSkills(p.skills),
+        0
+      );
+      const team2Score = team2.reduce(
+        (total, p) => total + calculateTotalSkills(p.skills),
+        0
+      );
+
+      if (Math.abs(team1Score - team2Score) > 10) {
+        // Move a player from the stronger team to the weaker one
+        const strongerTeam = team1Score > team2Score ? team1 : team2;
+        const weakerTeam = team1Score > team2Score ? team2 : team1;
+
+        const playerToMove = strongerTeam.pop();
+        if (playerToMove) {
+          weakerTeam.push(playerToMove);
+          redistributed = true;
+        }
+      }
+    }
+  }
+
+  return teams;
 }
 
 export function ParticipantsList({
@@ -79,41 +117,11 @@ export function ParticipantsList({
     );
   }
 
-  const sortedParticipants = [...participants].sort(
-    (a, b) => calculateTotalSkills(b.skills) - calculateTotalSkills(a.skills)
-  );
+  const numParticipants = participants.length;
+  const minTeamSize = 3;
+  const numTeams = Math.max(2, Math.floor(numParticipants / minTeamSize)); // Ensure at least 2 teams
 
-  const teams: { [key: string]: ParticipantData[] } = {};
-  const teamSizeRange = { min: 3, max: 5 };
-  let currentTeam = 1;
-
-  sortedParticipants.forEach((participant) => {
-    const teamKey = `Team ${currentTeam}`;
-
-    if (!teams[teamKey]) {
-      teams[teamKey] = [];
-    }
-
-    teams[teamKey].push(participant);
-
-    if (teams[teamKey].length >= teamSizeRange.max) {
-      currentTeam++;
-    }
-  });
-
-  Object.keys(teams).forEach((teamKey) => {
-    if (teams[teamKey].length < teamSizeRange.min) {
-      const nextTeamKey = `Team ${currentTeam + 1}`;
-      if (teams[nextTeamKey]) {
-        while (
-          teams[teamKey].length < teamSizeRange.min &&
-          teams[nextTeamKey].length > teamSizeRange.min
-        ) {
-          teams[teamKey].push(teams[nextTeamKey].pop()!);
-        }
-      }
-    }
-  });
+  const teams = balanceTeams(participants, numTeams);
 
   return (
     <Card>
@@ -122,27 +130,31 @@ export function ParticipantsList({
       </CardHeader>
       <CardContent>
         <div className="flex flex-row flex-wrap gap-4">
-          {Object.entries(teams).map(([teamName, teamPlayers]) => {
-            const teamScore = calculateTeamScore(teamPlayers); // Get the team score
-            const maxTeamScore = calculateMaxTeamScore(teamPlayers.length); // Get the max possible team score
-            const teamPercentage = (teamScore / maxTeamScore) * 100; // Calculate the percentage score
+          {teams.map((team, index) => {
+            const teamScore = team.reduce(
+              (total, participant) =>
+                total + calculateTotalSkills(participant.skills),
+              0
+            );
+            const maxTeamScore = team.length * 24 * 10; // 24 skills, 10 max points each
+            const teamPercentage = (teamScore / maxTeamScore) * 100;
 
             return (
-              <Card key={teamName} className="w-full max-w-[250px] flex-grow">
+              <Card key={`Team ${index + 1}`} className="w-full flex-grow">
                 <CardHeader>
-                  <CardTitle className="text-lg">{teamName}</CardTitle>
+                  <CardTitle className="text-lg">Team {index + 1}</CardTitle>
                   <CardDescription>
                     Team skills score: {teamPercentage.toFixed(1)} / 100%
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="list-disc list-inside">
-                    {teamPlayers.map((participant) => (
+                    {team.map((participant) => (
                       <li key={participant.id} className="text-sm">
                         {participant.withdrewAt ? (
                           <>
-                            <s>{participant.player.name}</s>
-                            ({participant.withdrewAt?.toLocaleDateString()})
+                            <s>{participant.player.name}</s>(
+                            {participant.withdrewAt?.toLocaleDateString()})
                           </>
                         ) : (
                           participant.player.name

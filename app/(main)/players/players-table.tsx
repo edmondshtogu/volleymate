@@ -30,16 +30,15 @@ export function PlayersTable({
   offset: number;
   totalPlayers: number;
 }) {
-  let router = useRouter();
-  let playersPerPage = 10;
+  const router = useRouter();
+  const playersPerPage = 5;
+  const currentPage = Math.ceil(offset / playersPerPage);
+  const totalPages = Math.ceil(totalPlayers / playersPerPage);
 
-  function prevPage() {
-    router.back();
-  }
-
-  function nextPage() {
-    router.push(`/?offset=${offset}`, { scroll: false });
-  }
+  const handlePageChange = (page: number) => {
+    const newOffset = (page - 1) * playersPerPage + 1;
+    router.push(`/players/?offset=${newOffset}`, { scroll: false });
+  };
 
   return (
     <Card>
@@ -64,38 +63,46 @@ export function PlayersTable({
         </Table>
       </CardContent>
       <CardFooter>
-        <form className="flex items-center w-full justify-between">
+        <div className="flex items-center justify-between w-full">
           <div className="text-xs text-muted-foreground">
             Showing{' '}
             <strong>
-              {Math.max(0, Math.min(offset - playersPerPage, totalPlayers) + 1)}
-              -{offset}
+              {(currentPage - 1) * playersPerPage + 1}-
+              {Math.min(currentPage * playersPerPage, totalPlayers)}
             </strong>{' '}
             of <strong>{totalPlayers}</strong> players
           </div>
-          <div className="flex">
+          <div className="flex items-center space-x-2">
             <Button
-              formAction={prevPage}
+              onClick={() => handlePageChange(currentPage - 1)}
               variant="ghost"
               size="sm"
-              type="submit"
-              disabled={offset === playersPerPage}
+              disabled={currentPage === 1}
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
               Prev
             </Button>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <Button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                variant={currentPage === index + 1 ? 'default' : 'ghost'}
+                size="sm"
+              >
+                {index + 1}
+              </Button>
+            ))}
             <Button
-              formAction={nextPage}
+              onClick={() => handlePageChange(currentPage + 1)}
               variant="ghost"
               size="sm"
-              type="submit"
-              disabled={offset + playersPerPage > totalPlayers}
+              disabled={currentPage === totalPages}
             >
               Next
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
-        </form>
+        </div>
       </CardFooter>
     </Card>
   );
