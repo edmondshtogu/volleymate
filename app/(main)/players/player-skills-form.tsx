@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,40 +12,73 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 import { Player, SkillScale } from '@/lib/models';
 
 // Map skill names to their descriptions
-const skillDescriptions: Record<SkillKey, string> = {
-  serving: `Ability to serve the ball. Rate yourself based on the following criteria:
-   * Consistency: How often they can serve without faults.
-   * Power: Ability to serve with speed or power.
-   * Accuracy: Ability to place serves effectively (e.g., targeting specific zones).
-  `,
-  passing: `Ability to pass the ball. Rate yourself based on the following criteria:
-   * Control: Ability to control the ball to the setter accurately.
-   * Positioning: Skill in moving into position for a good pass.
-   * First Contact: Ability to handle difficult serves or spikes.
-  `,
-  blocking: `Ability to block the ball. Rate yourself based on the following criteria:
-   * Timing: Ability to time jumps effectively against opponents.
-   * Positioning: Skill in positioning for solo or double blocks.
-   * Reading Attacks: Ability to anticipate where an attacker will hit.
-  `,
-  hittingSpiking: `Ability to hit/spike the ball. Rate yourself based on the following criteria:
-   * Power: Strength and speed in attacking the ball.
-   * Placement: Ability to hit accurately to different zones.
-   * Timing: Ability to time jumps well to connect with sets.
-  `,
-  defenseDigging: `Ability to defense/dig the ball. Rate yourself based on the following criteria:
-   * Reaction Time: Quickness in reacting to spikes or hard-driven balls.
-   * Footwork: Ability to move into position for a good dig.
-   * Ball Control: Skill in keeping digs playable for teammates.
-  `,
-  athleticism: `Ability to pass the ball. Rate yourself based on the following criteria:
-   * Speed and Agility: Overall quickness on the court.
-   * Vertical Jump: Jumping height, especially for spiking and blocking.
-   * Stamina: Physical endurance for longer matches or games.
-  `
+const skillDescriptions: Record<
+  SkillKey,
+  { title: string; criteria: string[] }
+> = {
+  serving: {
+    title:
+      'Ability to serve the ball. Rate yourself based on the following criteria:',
+    criteria: [
+      'Consistency: How often they can serve without faults.',
+      'Power: Ability to serve with speed or power.',
+      'Accuracy: Ability to place serves effectively (e.g., targeting specific zones).'
+    ]
+  },
+  passing: {
+    title:
+      'Ability to pass the ball. Rate yourself based on the following criteria:',
+    criteria: [
+      'Control: Ability to control the ball to the setter accurately.',
+      'Positioning: Skill in moving into position for a good pass.',
+      'First Contact: Ability to handle difficult serves or spikes.'
+    ]
+  },
+  blocking: {
+    title:
+      'Ability to block the ball. Rate yourself based on the following criteria:',
+    criteria: [
+      'Timing: Ability to time jumps effectively against opponents.',
+      'Positioning: Skill in positioning for solo or double blocks.',
+      'Reading Attacks: Ability to anticipate where an attacker will hit.'
+    ]
+  },
+  hittingSpiking: {
+    title:
+      'Ability to hit/spike the ball. Rate yourself based on the following criteria:',
+    criteria: [
+      'Power: Strength and speed in attacking the ball.',
+      'Placement: Ability to hit accurately to different zones.',
+      'Timing: Ability to time jumps well to connect with sets.'
+    ]
+  },
+  defenseDigging: {
+    title:
+      'Ability to defense/dig the ball. Rate yourself based on the following criteria:',
+    criteria: [
+      'Reaction Time: Quickness in reacting to spikes or hard-driven balls.',
+      'Footwork: Ability to move into position for a good dig.',
+      'Ball Control: Skill in keeping digs playable for teammates.'
+    ]
+  },
+  athleticism: {
+    title:
+      'Overall athletic ability. Rate yourself based on the following criteria:',
+    criteria: [
+      'Speed and Agility: Overall quickness on the court.',
+      'Vertical Jump: Jumping height, especially for spiking and blocking.',
+      'Stamina: Physical endurance for longer matches or games.'
+    ]
+  }
 };
 
 type SkillKey = keyof Omit<Player, 'id' | 'name' | 'configured'>;
@@ -90,17 +125,45 @@ export function PlayerSkillsForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {skillCategories.map((category) => (
-        <Card key={category.title}>
-          <CardHeader>
-            <CardTitle className="text-lg">{category.title}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div key={category.skill}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {skillCategories.map((category) => (
+          <Card key={category.title} className="w-full">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center justify-between">
+                {category.title}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="p-0">
+                        <Info className="h-4 w-4" />
+                        <span className="sr-only">More info</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="max-w-xs">
+                        <p className="mb-2 font-semibold">
+                          {skillDescriptions[category.skill as SkillKey].title}
+                        </p>
+                        <ul className="list-disc pl-4 space-y-1">
+                          {skillDescriptions[
+                            category.skill as SkillKey
+                          ].criteria.map((criterion, index) => (
+                            <li key={index} className="text-sm">
+                              {criterion}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
                 <Label
                   htmlFor={category.skill}
-                  className="block text-sm font-medium text-gray-700 capitalize mb-1"
+                  className="text-sm font-medium text-gray-700 capitalize"
                 >
                   {category.skill.replace(/([A-Z])/g, ' $1').trim()}
                 </Label>
@@ -119,7 +182,7 @@ export function PlayerSkillsForm({
                   </SelectTrigger>
                   <SelectContent>
                     {Object.keys(SkillScale)
-                      .filter((key) => isNaN(Number(key))) // filter out numeric keys
+                      .filter((key) => isNaN(Number(key)))
                       .map((key) => (
                         <SelectItem
                           key={key}
@@ -132,24 +195,22 @@ export function PlayerSkillsForm({
                       ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-gray-500 mt-1">
-                  {skillDescriptions[category.skill as SkillKey]}
-                </p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-      <div className="flex justify-end space-x-4">
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isSaving}
+          className="w-full sm:w-auto"
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSaving}>
+        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
