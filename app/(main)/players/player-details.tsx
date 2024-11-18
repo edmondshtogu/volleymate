@@ -6,6 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Player } from '@/lib/models';
 import { PlayerSkillsForm } from './player-skills-form';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer
+} from 'recharts';
 
 const ratingMap: Record<string, string> = {
   '1': 'Beginner',
@@ -49,6 +57,12 @@ export function PlayerDetails({ player }: { player: Player }) {
     { title: 'Athleticism Skills', skill: 'athleticism' }
   ] as const;
 
+  const chartData = skillCategories.map((category) => ({
+    subject: category.title,
+    A: currentPlayer[category.skill as keyof Player],
+    fullMark: 5
+  }));
+
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -68,38 +82,60 @@ export function PlayerDetails({ player }: { player: Player }) {
             onCancel={() => setIsEditing(false)}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {skillCategories.map((category) => (
-              <Card key={category.title}>
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    <u>{category.title}</u>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li key={category.skill} className="flex justify-between">
-                      <span className="capitalize">
-                        <b>
-                          {category.skill.replace(/([A-Z])/g, ' $1').trim()}
-                        </b>
-                      </span>
-                      <span>
-                        {
-                          // Convert the numeric skill value to the rating label
-                          ratingMap[
-                            currentPlayer[
-                              category.skill as keyof Player
-                            ].toString()
-                          ]
-                        }
-                      </span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <>
+            <div className="mb-6">
+              <ResponsiveContainer width="100%" height={400}>
+                <RadarChart
+                  cx="50%"
+                  cy="50%"
+                  outerRadius="80%"
+                  data={chartData}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis angle={30} domain={[0, 5]} />
+                  <Radar
+                    name="Player"
+                    dataKey="A"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {skillCategories.map((category) => (
+                <Card key={category.title}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      <u>{category.title}</u>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      <li key={category.skill} className="flex justify-between">
+                        <span className="capitalize">
+                          <b>
+                            {category.skill.replace(/([A-Z])/g, ' $1').trim()}
+                          </b>
+                        </span>
+                        <span>
+                          {
+                            ratingMap[
+                              currentPlayer[
+                                category.skill as keyof Player
+                              ].toString()
+                            ]
+                          }
+                        </span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
