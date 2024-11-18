@@ -6,7 +6,7 @@ export default async function PlayersPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const search = searchParams.q ?? '';
-  const offset = parseInt(searchParams.offset, 10) ?? 0;
+  const offset = Number(searchParams.offset) ?? 0;
   const limit = 5;
   const { players, totalPlayers } = await getPlayers(search, limit, offset);
   return (
