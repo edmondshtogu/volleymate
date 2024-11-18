@@ -18,9 +18,6 @@ export default async function Page() {
   }
 
   const upcomingEvent = await getUpcomingEvent();
-
-  console.log(upcomingEvent?.participants.length);
-
   const isParticipating = upcomingEvent?.participants.some(
     (p) => p.playerId === userId && !p.withdrewAt
   );
