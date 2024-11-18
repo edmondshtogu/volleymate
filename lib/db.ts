@@ -49,11 +49,6 @@ export async function getPlayerById(id: number): Promise<Player> {
   const filteredPlayers: Array<Player> = await selectPlayersQuery
     .where(eq(players.id, id))
     .limit(1);
-
-  if (filteredPlayers.length < 1) {
-    throw new Error('player not found');
-  }
-
   return filteredPlayers[0];
 }
 export async function getPlayers(
@@ -68,6 +63,7 @@ export async function getPlayers(
   if (search) {
     const data = await selectPlayersQuery
       .where(ilike(players.name, `%${search}%`))
+      .orderBy(players.name)
       .limit(limit)
       .offset(offset);
     return {
@@ -101,10 +97,6 @@ export async function isPlayerConfigured(id: number): Promise<boolean> {
     .from(players)
     .where(eq(players.id, id))
     .limit(1);
-
-  if (playersSelect.length < 1) {
-    throw new Error('player not found');
-  }
 
   const playerSelect = playersSelect[0];
 
@@ -168,14 +160,13 @@ const selectParticipantsQuery = db
   .select({
     playerId: players.id,
     name: players.name,
-    skillsScore: sql<number>`(
+    skillsScore: sql<number>`
       ${players.serving} + 
       ${players.passing} + 
       ${players.blocking} + 
       ${players.hittingSpiking} + 
       ${players.defenseDigging} + 
-      ${players.athleticism}
-    ) / 6`,
+      ${players.athleticism}`,
     withdrewAt: participants.withdrewAt
   })
   .from(participants)
@@ -255,7 +246,9 @@ export async function getUpcomingEvent(): Promise<Event | null> {
 
   const eventParticipants: Participant[] = await selectParticipantsQuery.where(
     eq(participants.eventId, event.id)
-  ).limit(1000);
+  )
+  .orderBy(players.name)
+  .limit(200);
 
   return {
     ...event,
