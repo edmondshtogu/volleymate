@@ -12,7 +12,7 @@ import { PlayerDetails } from '../players/player-details';
 
 export default async function SettingsPage() {
   const cookieStore = await cookies();
-  const id = cookieStore.get('id')?.value;
+  const id = cookieStore.get('player_id')?.value;
   if (!id) {
     return <PageError error={Error('Player not found!')}></PageError>;
   }

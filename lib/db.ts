@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { count, desc, eq, and, ilike, notInArray, sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { Player, Participant, Event, SkillScale } from './models';
+import { Player, Participant, Event } from './models';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
@@ -36,12 +36,12 @@ const selectPlayersQuery = db
     id: players.id,
     name: players.name,
     configured: players.configured,
-    serving: sql<number>`${players.serving}::INTEGER`,
-    passing: sql<number>`${players.passing}::INTEGER`,
-    blocking: sql<number>`${players.blocking}::INTEGER`,
-    hittingSpiking: sql<number>`${players.hittingSpiking}::INTEGER`,
-    defenseDigging: sql<number>`${players.defenseDigging}::INTEGER`,
-    athleticism: sql<number>`${players.athleticism}::INTEGER`
+    serving: players.serving,
+    passing: players.passing,
+    blocking: players.blocking,
+    hittingSpiking: players.hittingSpiking,
+    defenseDigging: players.defenseDigging,
+    athleticism: players.athleticism
   })
   .from(players);
 
@@ -153,7 +153,7 @@ export async function updatePlayerSkills(player: Player): Promise<void> {
 }
 
 // Participant Table
-export const participants = pgTable('participants', {
+export const participants = pgTable('volley_participants', {
   id: serial('id').primaryKey(),
   eventId: integer('event_id')
     .references(() => events.id)

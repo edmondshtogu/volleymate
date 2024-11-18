@@ -19,7 +19,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Set "configured" cookie
     const response = NextResponse.json({ success: true });
-    response.cookies.set('configured', 'true', { path: '/' });
+    response.cookies.set('player_configured', 'true', { path: '/' });
     return response;
   } catch (error) {
     console.error('Error saving skills:', error);

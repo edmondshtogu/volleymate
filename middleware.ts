@@ -10,7 +10,7 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
     return NextResponse.redirect('/api/auth/login');
   }
 
-  const playerIdCookie = req.cookies.get('id');
+  const playerIdCookie = req.cookies.get('player_id');
   if (playerIdCookie && Number(playerIdCookie.value) > 0) {
     return res;
   }
@@ -20,10 +20,10 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
   // Check if the player exists, if not, add them
   const playerId = await generateUserPlayer(user['sub'], user['name']);
   
-  res.cookies.set('id', playerId.toString(), { path: '/' });
-  req.cookies.set('id', playerId.toString());
-  res.cookies.set('configured', 'false', { path: '/' });
-  req.cookies.set('configured', 'false');
+  res.cookies.set('player_id', playerId.toString(), { path: '/' });
+  req.cookies.set('player_id', playerId.toString());
+  res.cookies.set('player_configured', 'false', { path: '/' });
+  req.cookies.set('player_configured', 'false');
   
   return res;
 });

@@ -8,10 +8,10 @@ import { getUpcomingEvent } from '@/lib/db';
 
 export default async function Page() {
   const cookieStore = await cookies();
-  const userId = cookieStore.get('id')?.value
-    ? Number(cookieStore.get('id')!.value)
+  const userId = cookieStore.get('player_id')?.value
+    ? Number(cookieStore.get('player_id')!.value)
     : null;
-  const isConfigured = Boolean(cookieStore.get('configured')?.value);
+  const isConfigured = Boolean(cookieStore.get('player_configured')?.value);
 
   if (!userId || !isConfigured) {
     return <PageError error={Error('Player not found!')} />;
