@@ -37,7 +37,7 @@ export function PlayersTable({
   const totalPages = Math.ceil(totalPlayers / limit);
 
   const handlePageChange = (page: number) => {
-    const newOffset = (page - 1) * limit + 1;
+    const newOffset = (page - 1) * limit;
     router.push(`/players/?offset=${newOffset}`, { scroll: false });
   };
 

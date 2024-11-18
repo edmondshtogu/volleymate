@@ -31,24 +31,30 @@ export const players = pgTable('volley_players', {
   athleticism: smallint('athleticism').notNull().default(1)
 });
 const insertPlayerSchema = createInsertSchema(players);
-const selectPlayersQuery = db
-  .select({
-    id: players.id,
-    name: players.name,
-    configured: players.configured,
-    serving: players.serving,
-    passing: players.passing,
-    blocking: players.blocking,
-    hittingSpiking: players.hittingSpiking,
-    defenseDigging: players.defenseDigging,
-    athleticism: players.athleticism
-  })
-  .from(players);
+const selectPlayersQuery = () =>
+  db
+    .select({
+      id: players.id,
+      name: players.name,
+      configured: players.configured,
+      serving: players.serving,
+      passing: players.passing,
+      blocking: players.blocking,
+      hittingSpiking: players.hittingSpiking,
+      defenseDigging: players.defenseDigging,
+      athleticism: players.athleticism
+    })
+    .from(players);
 
 export async function getPlayerById(id: number): Promise<Player> {
-  const filteredPlayers: Array<Player> = await selectPlayersQuery
+  const filteredPlayers: Array<Player> = await selectPlayersQuery()
     .where(eq(players.id, id))
     .limit(1);
+
+  if (filteredPlayers.length < 1) {
+    throw new Error(`player not found (id: ${id})`);
+  }
+
   return filteredPlayers[0];
 }
 export async function getPlayers(
@@ -61,7 +67,7 @@ export async function getPlayers(
 }> {
   // Always search the full table, not per page
   if (search) {
-    const data = await selectPlayersQuery
+    const data = await selectPlayersQuery()
       .where(ilike(players.name, `%${search}%`))
       .orderBy(players.name)
       .limit(limit)
@@ -77,7 +83,7 @@ export async function getPlayers(
   }
 
   const totalPlayers = await db.select({ count: count() }).from(players);
-  const filteredPlayers: Array<Player> = await selectPlayersQuery
+  const filteredPlayers: Array<Player> = await selectPlayersQuery()
     .limit(limit)
     .offset(offset);
 
@@ -90,7 +96,7 @@ export async function deletePlayerById(id: number) {
   await db.delete(players).where(eq(players.id, id));
 }
 export async function isPlayerConfigured(id: number): Promise<boolean> {
-  const playersSelect = await db
+  const filteredPlayers = await db
     .select({
       configured: players.configured
     })
@@ -98,9 +104,13 @@ export async function isPlayerConfigured(id: number): Promise<boolean> {
     .where(eq(players.id, id))
     .limit(1);
 
-  const playerSelect = playersSelect[0];
+  if (filteredPlayers.length < 1) {
+    throw new Error(`player not found (id: ${id})`);
+  }
 
-  return playerSelect.configured;
+  const player = filteredPlayers[0];
+
+  return player.configured;
 }
 export async function generateUserPlayer(
   userId: string,
@@ -156,21 +166,6 @@ export const participants = pgTable('volley_participants', {
   withdrewAt: timestamp('withdrew_at')
 });
 const insertParticipantSchema = createInsertSchema(participants);
-const selectParticipantsQuery = db
-  .select({
-    playerId: players.id,
-    name: players.name,
-    skillsScore: sql<number>`
-      ${players.serving} + 
-      ${players.passing} + 
-      ${players.blocking} + 
-      ${players.hittingSpiking} + 
-      ${players.defenseDigging} + 
-      ${players.athleticism}`,
-    withdrewAt: participants.withdrewAt
-  })
-  .from(participants)
-  .innerJoin(players, eq(participants.playerId, players.id));
 export async function insertParticipant(
   eventId: number,
   playerId: number
@@ -244,11 +239,24 @@ export async function getUpcomingEvent(): Promise<Event | null> {
   }
   const event = filteredEvents[0];
 
-  const eventParticipants: Participant[] = await selectParticipantsQuery.where(
-    eq(participants.eventId, event.id)
-  )
-  .orderBy(players.name)
-  .limit(200);
+  const eventParticipants: Participant[] = await db
+    .select({
+      playerId: players.id,
+      name: players.name,
+      skillsScore: sql<number>`
+      ${players.serving} + 
+      ${players.passing} + 
+      ${players.blocking} + 
+      ${players.hittingSpiking} + 
+      ${players.defenseDigging} + 
+      ${players.athleticism}`,
+      withdrewAt: participants.withdrewAt
+    })
+    .from(participants)
+    .innerJoin(players, eq(participants.playerId, players.id))
+    .where(eq(participants.eventId, event.id))
+    .orderBy(players.name)
+    .limit(200);
 
   return {
     ...event,
@@ -271,17 +279,25 @@ export async function retainTop2Events() {
   // Delete events not in top 3
   await db.delete(events).where(notInArray(events.id, topEventIds));
 }
-export async function addEvent(name: string, location: string, startTime: Date, endTime: Date): Promise<number> {
-  const addedEvent = await db.insert(events).values(
-    insertEventSchema.parse({
-      name,
-      location,
-      startTime,
-      endTime
-    })
-  ).returning({
-    id: events.id
-  });
+export async function addEvent(
+  name: string,
+  location: string,
+  startTime: Date,
+  endTime: Date
+): Promise<number> {
+  const addedEvent = await db
+    .insert(events)
+    .values(
+      insertEventSchema.parse({
+        name,
+        location,
+        startTime,
+        endTime
+      })
+    )
+    .returning({
+      id: events.id
+    });
 
   return addedEvent[0].id;
 }

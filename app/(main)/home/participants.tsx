@@ -88,7 +88,7 @@ export function ParticipantsList({
               team.reduce(
                 (total, participant) => total + participant.skillsScore,
                 0
-              ) * 5;
+              );
             const maxTeamScore = team.length * 6 * 5; // 6 skills, 5 max points each
             const teamPercentage = (teamScore / maxTeamScore) * 100;
             return (
