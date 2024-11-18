@@ -1,23 +1,19 @@
 import { getPlayers } from '@/lib/db';
 import { PlayersTable } from './players-table';
 
-
-export default async function PlayersPage(
-  props: {
-    searchParams: Promise<{ q: string; offset: string }>;
-  }
-) {
+export default async function PlayersPage(props: {
+  searchParams: Promise<{ q: string; offset: string }>;
+}) {
   const searchParams = await props.searchParams;
   const search = searchParams.q ?? '';
-  const offset = searchParams.offset ?? 0;
-  const { players, newOffset, totalPlayers } = await getPlayers(
-    search,
-    Number(offset)
-  );
+  const offset = parseInt(searchParams.offset, 10) ?? 0;
+  const limit = 5;
+  const { players, totalPlayers } = await getPlayers(search, limit, offset);
   return (
     <PlayersTable
       players={players}
-      offset={newOffset ?? 0}
+      limit={limit}
+      offset={offset}
       totalPlayers={totalPlayers}
     />
   );

@@ -36,27 +36,19 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    * Control: Ability to control the ball to the setter accurately.
    * Positioning: Skill in moving into position for a good pass.
    * First Contact: Ability to handle difficult serves or spikes.
-3. Setting
-   * Accuracy: How accurately they can set to spikers.
-   * Decision-Making: Ability to choose the best spiker based on defense.
-   * Consistency: Delivering reliable sets under pressure.
+3. Blocking
+   * Timing: Ability to time jumps effectively against opponents.
+   * Positioning: Skill in positioning for solo or double blocks.
+   * Reading Attacks: Ability to anticipate where an attacker will hit.
 4. Hitting/Spiking
    * Power: Strength and speed in attacking the ball.
    * Placement: Ability to hit accurately to different zones.
    * Timing: Ability to time jumps well to connect with sets.
-5. Blocking
-   * Timing: Ability to time jumps effectively against opponents.
-   * Positioning: Skill in positioning for solo or double blocks.
-   * Reading Attacks: Ability to anticipate where an attacker will hit.
-6. Defense/Digging
+5. Defense/Digging
    * Reaction Time: Quickness in reacting to spikes or hard-driven balls.
    * Footwork: Ability to move into position for a good dig.
    * Ball Control: Skill in keeping digs playable for teammates.
-7. Team Play
-   * Communication: Effectiveness in communicating with teammates on the court.
-   * Positional Awareness: Ability to stay in position and cover the court properly.
-   * Adaptability: Willingness to play multiple roles if needed.
-8. Athleticism
+6. Athleticism
    * Speed and Agility: Overall quickness on the court.
    * Vertical Jump: Jumping height, especially for spiking and blocking.
    * Stamina: Physical endurance for longer matches or games.

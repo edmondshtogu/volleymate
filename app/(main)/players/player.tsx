@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { SelectPlayer } from '@/lib/db';
+import { Player as PlayerModel } from '@/lib/models';
 import { Eye } from 'lucide-react';
 import Link from 'next/link';
 
-export function Player({ player }: { player: SelectPlayer }) {
+export function Player({ player }: { player: PlayerModel }) {
   return (
     <TableRow>
       <TableCell className="font-medium w-[80%]">{player.name}</TableCell>

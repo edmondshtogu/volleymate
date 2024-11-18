@@ -6,148 +6,87 @@ import {
   pgTable,
   text,
   integer,
+  smallint,
   timestamp,
   serial,
-  boolean,
-  pgEnum
+  boolean
 } from 'drizzle-orm/pg-core';
-import { count, desc, eq, and, ilike, notInArray } from 'drizzle-orm';
+import { count, desc, eq, and, ilike, notInArray, sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
+import { Player, Participant, Event, SkillScale } from './models';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
-// Skills Enum for different ratings (e.g., 1-10 scale)
-const skillScaleEnum = pgEnum('skill_scale', [
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10'
-]);
-
-// SkillsSet Table
-export const skillsSet = pgTable('skills_set', {
-  id: serial('id').primaryKey(),
-  playerId: integer('player_id')
-    .references(() => players.id)
-    .notNull(),
-
-  // Serving Skills
-  servingConsistency: skillScaleEnum('serving_consistency').notNull(),
-  servingPower: skillScaleEnum('serving_power').notNull(),
-  servingAccuracy: skillScaleEnum('serving_accuracy').notNull(),
-
-  // Passing Skills
-  passingControl: skillScaleEnum('passing_control').notNull(),
-  passingPositioning: skillScaleEnum('passing_positioning').notNull(),
-  passingFirstContact: skillScaleEnum('passing_first_contact').notNull(),
-
-  // Setting Skills
-  settingAccuracy: skillScaleEnum('setting_accuracy').notNull(),
-  settingDecisionMaking: skillScaleEnum('setting_decision_making').notNull(),
-  settingConsistency: skillScaleEnum('setting_consistency').notNull(),
-
-  // Hitting/Spiking Skills
-  hittingSpikingPower: skillScaleEnum('hitting_spiking_power').notNull(),
-  hittingSpikingPlacement: skillScaleEnum(
-    'hitting_spiking_placement'
-  ).notNull(),
-  hittingSpikingTiming: skillScaleEnum('hitting_spiking_timing').notNull(),
-
-  // Blocking Skills
-  blockingTiming: skillScaleEnum('blocking_timing').notNull(),
-  blockingPositioning: skillScaleEnum('blocking_positioning').notNull(),
-  blockingReadingAttacks: skillScaleEnum('blocking_reading_attacks').notNull(),
-
-  // Defense/Digging Skills
-  defenseReactionTime: skillScaleEnum('defense_reaction_time').notNull(),
-  defenseFootwork: skillScaleEnum('defense_footwork').notNull(),
-  defenseBallControl: skillScaleEnum('defense_ball_control').notNull(),
-
-  // Team Play Skills
-  teamPlayCommunication: skillScaleEnum('team_play_communication').notNull(),
-  teamPlayPositionalAwareness: skillScaleEnum(
-    'team_play_positional_awareness'
-  ).notNull(),
-  teamPlayAdaptability: skillScaleEnum('team_play_adaptability').notNull(),
-
-  // Athleticism Skills
-  athleticismSpeedAgility: skillScaleEnum(
-    'athleticism_speed_agility'
-  ).notNull(),
-  athleticismVerticalJump: skillScaleEnum(
-    'athleticism_vertical_jump'
-  ).notNull(),
-  athleticismStamina: skillScaleEnum('athleticism_stamina').notNull()
-});
-export type SelectSkillsSet = typeof skillsSet.$inferSelect;
-export const insertSkillsSetSchema = createInsertSchema(skillsSet);
-
 // Player Table
-export const players = pgTable('players', {
+export const players = pgTable('volley_players', {
   id: serial('id').primaryKey(),
   userId: text('userid').notNull(),
   name: text('name').notNull(),
-  configured: boolean('configured').notNull()
+  configured: boolean('configured').notNull(),
+  serving: smallint('serving').notNull().default(1),
+  passing: smallint('passing').notNull().default(1),
+  blocking: smallint('blocking').notNull().default(1),
+  hittingSpiking: smallint('hitting_spiking').notNull().default(1),
+  defenseDigging: smallint('defense_digging').notNull().default(1),
+  athleticism: smallint('athleticism').notNull().default(1)
 });
-export type SelectPlayer = typeof players.$inferSelect;
-export const insertPlayerSchema = createInsertSchema(players);
-export async function getPlayerById(
-  id: number
-): Promise<SelectPlayer & { skills: SelectSkillsSet | null }> {
-  const player = await db
-    .select()
-    .from(players)
+const insertPlayerSchema = createInsertSchema(players);
+const selectPlayersQuery = db
+  .select({
+    id: players.id,
+    name: players.name,
+    configured: players.configured,
+    serving: sql<number>`${players.serving}::INTEGER`,
+    passing: sql<number>`${players.passing}::INTEGER`,
+    blocking: sql<number>`${players.blocking}::INTEGER`,
+    hittingSpiking: sql<number>`${players.hittingSpiking}::INTEGER`,
+    defenseDigging: sql<number>`${players.defenseDigging}::INTEGER`,
+    athleticism: sql<number>`${players.athleticism}::INTEGER`
+  })
+  .from(players);
+
+export async function getPlayerById(id: number): Promise<Player> {
+  const filteredPlayers: Array<Player> = await selectPlayersQuery
     .where(eq(players.id, id))
     .limit(1);
 
-  const skills =
-    player.length > 0
-      ? await db
-          .select()
-          .from(skillsSet)
-          .where(eq(skillsSet.playerId, player[0].id))
-          .limit(1)
-      : null;
-  return { ...player[0], skills: skills ? skills[0] : null };
+  if (filteredPlayers.length < 1) {
+    throw new Error('player not found');
+  }
+
+  return filteredPlayers[0];
 }
 export async function getPlayers(
   search: string,
+  limit: number,
   offset: number
 ): Promise<{
-  players: SelectPlayer[];
-  newOffset: number | null;
+  players: Array<Player>;
   totalPlayers: number;
 }> {
   // Always search the full table, not per page
   if (search) {
+    const data = await selectPlayersQuery
+      .where(ilike(players.name, `%${search}%`))
+      .limit(limit)
+      .offset(offset);
     return {
-      players: await db
-        .select()
-        .from(players)
-        .where(ilike(players.name, `%${search}%`))
-        .limit(1000),
-      newOffset: null,
-      totalPlayers: 0
+      players: data,
+      totalPlayers: data.length
     };
   }
 
-  if (offset === null) {
-    return { players: [], newOffset: null, totalPlayers: 0 };
+  if (offset === null || limit === null) {
+    return { players: [], totalPlayers: 0 };
   }
 
-  let totalPlayers = await db.select({ count: count() }).from(players);
-  let morePlayers = await db.select().from(players).limit(5).offset(offset);
-  let newOffset = morePlayers.length >= 5 ? offset + 5 : null;
+  const totalPlayers = await db.select({ count: count() }).from(players);
+  const filteredPlayers: Array<Player> = await selectPlayersQuery
+    .limit(limit)
+    .offset(offset);
 
   return {
-    players: morePlayers,
-    newOffset,
+    players: filteredPlayers,
     totalPlayers: totalPlayers[0].count
   };
 }
@@ -155,42 +94,62 @@ export async function deletePlayerById(id: number) {
   await db.delete(players).where(eq(players.id, id));
 }
 export async function isPlayerConfigured(id: number): Promise<boolean> {
-  const player = await db
-    .select()
+  const playersSelect = await db
+    .select({
+      configured: players.configured
+    })
     .from(players)
     .where(eq(players.id, id))
     .limit(1);
 
-  return player[0].configured;
-}
+  if (playersSelect.length < 1) {
+    throw new Error('player not found');
+  }
 
-// Event Table
-export const events = pgTable('events', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  location: text('location').notNull(),
-  date: timestamp('date').notNull()
-});
-export type SelectEvent = typeof events.$inferSelect;
-export const insertEventSchema = createInsertSchema(events);
-export async function getEvents(): Promise<SelectEvent[]> {
-  return await db.select().from(events);
-}
-export async function retainTop2Events() {
-  const topEvents = await db
-    .select()
-    .from(events)
-    .orderBy(desc(events.date))
-    .limit(2);
-  const topEventIds = topEvents.map((event) => event.id);
+  const playerSelect = playersSelect[0];
 
-  // Delete participants not in top 3 events
+  return playerSelect.configured;
+}
+export async function generateUserPlayer(
+  userId: string,
+  name: string
+): Promise<number> {
+  // Check if the player exists, if not, add them
+  let playersSelect = await db
+    .select({
+      id: players.id
+    })
+    .from(players)
+    .where(eq(players.userId, userId))
+    .limit(1);
+
+  if (playersSelect.length === 1) {
+    return playersSelect[0].id;
+  }
+  const newPlayer = insertPlayerSchema.parse({
+    userId: userId,
+    name: name,
+    configured: false
+  });
+  const insertResult = await db.insert(players).values(newPlayer).returning({
+    id: players.id
+  });
+
+  return insertResult[0].id;
+}
+export async function updatePlayerSkills(player: Player): Promise<void> {
   await db
-    .delete(participants)
-    .where(notInArray(participants.eventId, topEventIds));
-
-  // Delete events not in top 3
-  await db.delete(events).where(notInArray(events.id, topEventIds));
+    .update(players)
+    .set({
+      configured: true,
+      serving: player.serving,
+      passing: player.passing,
+      blocking: player.blocking,
+      hittingSpiking: player.hittingSpiking,
+      defenseDigging: player.defenseDigging,
+      athleticism: player.athleticism
+    })
+    .where(eq(players.id, player.id));
 }
 
 // Participant Table
@@ -204,46 +163,34 @@ export const participants = pgTable('participants', {
     .notNull(),
   withdrewAt: timestamp('withdrew_at')
 });
-export type SelectParticipant = typeof participants.$inferSelect;
-export const insertParticipantSchema = createInsertSchema(participants);
-export async function getParticipantsForEvent(eventId: number): Promise<
-  (SelectParticipant & {
-    player: SelectPlayer;
-    skills: SelectSkillsSet | null;
-  })[]
-> {
-  const participantRecords = await db
-    .select()
-    .from(participants)
-    .where(eq(participants.eventId, eventId));
-
-  const participantsWithDetails = await Promise.all(
-    participantRecords.map(async (participant) => {
-      const player = await db
-        .select()
-        .from(players)
-        .where(eq(players.id, participant.playerId))
-        .limit(1);
-      const skills = await db
-        .select()
-        .from(skillsSet)
-        .where(eq(skillsSet.playerId, participant.playerId))
-        .limit(1);
-
-      return {
-        ...participant,
-        player: player[0],
-        skills: skills[0] || null
-      };
+const insertParticipantSchema = createInsertSchema(participants);
+const selectParticipantsQuery = db
+  .select({
+    playerId: players.id,
+    name: players.name,
+    skillsScore: sql<number>`(
+      ${players.serving} + 
+      ${players.passing} + 
+      ${players.blocking} + 
+      ${players.hittingSpiking} + 
+      ${players.defenseDigging} + 
+      ${players.athleticism}
+    ) / 6`,
+    withdrewAt: participants.withdrewAt
+  })
+  .from(participants)
+  .innerJoin(players, eq(participants.playerId, players.id));
+export async function insertParticipant(
+  eventId: number,
+  playerId: number
+): Promise<void> {
+  await db.insert(participants).values(
+    insertParticipantSchema.parse({
+      eventId,
+      playerId,
+      withdrewAt: null
     })
   );
-
-  return participantsWithDetails;
-}
-export async function insertParticipant(
-  participant: typeof insertParticipantSchema._type
-): Promise<void> {
-  await db.insert(participants).values(participant);
 }
 export async function updateParticipantWithdrawal(
   eventId: number,
@@ -260,9 +207,14 @@ export async function updateParticipantWithdrawal(
       )
     );
 }
-export async function getParticipant(eventId: number, playerId: number): Promise<SelectParticipant | null> {
+export async function isPlayerParticipatingEvent(
+  eventId: number,
+  playerId: number
+): Promise<boolean> {
   const participant = await db
-    .select()
+    .select({
+      id: participants.id
+    })
     .from(participants)
     .where(
       and(
@@ -272,9 +224,71 @@ export async function getParticipant(eventId: number, playerId: number): Promise
     )
     .limit(1);
 
-  if (participant.length < 1){
+  return participant.length < 1;
+}
+
+// Event Table
+export const events = pgTable('volley_events', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  location: text('location').notNull(),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time').notNull()
+});
+const insertEventSchema = createInsertSchema(events);
+export async function getUpcomingEvent(): Promise<Event | null> {
+  const filteredEvents = await db
+    .select({
+      id: events.id,
+      name: events.name,
+      location: events.location,
+      startTime: events.startTime,
+      endTime: events.endTime
+    })
+    .from(events)
+    .orderBy(desc(events.startTime))
+    .limit(1);
+  if (filteredEvents.length < 1) {
     return null;
   }
+  const event = filteredEvents[0];
 
-  return participant[0];
+  const eventParticipants: Participant[] = await selectParticipantsQuery.where(
+    eq(participants.eventId, event.id)
+  ).limit(1000);
+
+  return {
+    ...event,
+    participants: eventParticipants
+  };
+}
+export async function retainTop2Events() {
+  const topEvents = await db
+    .select()
+    .from(events)
+    .orderBy(desc(events.startTime))
+    .limit(2);
+  const topEventIds = topEvents.map((event) => event.id);
+
+  // Delete participants not in top 3 events
+  await db
+    .delete(participants)
+    .where(notInArray(participants.eventId, topEventIds));
+
+  // Delete events not in top 3
+  await db.delete(events).where(notInArray(events.id, topEventIds));
+}
+export async function addEvent(name: string, location: string, startTime: Date, endTime: Date): Promise<number> {
+  const addedEvent = await db.insert(events).values(
+    insertEventSchema.parse({
+      name,
+      location,
+      startTime,
+      endTime
+    })
+  ).returning({
+    id: events.id
+  });
+
+  return addedEvent[0].id;
 }

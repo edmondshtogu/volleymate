@@ -1,37 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser } from '@auth0/nextjs-auth0/client';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SelectPlayer, SelectSkillsSet } from '@/lib/db';
+import { Player } from '@/lib/models';
 import { PlayerSkillsForm } from './player-skills-form';
-
-type PlayerWithSkills = SelectPlayer & { skills: SelectSkillsSet | null };
 
 const ratingMap: Record<string, string> = {
   '1': 'Beginner',
-  '2': 'Novice',
-  '3': 'Developing',
-  '4': 'Competent',
-  '5': 'Proficient',
-  '6': 'Skilled',
-  '7': 'Advanced',
-  '8': 'Expert',
-  '9': 'Master',
-  '10': 'Elite'
+  '2': 'Developing',
+  '3': 'Competent',
+  '4': 'Proficient',
+  '5': 'Skilled'
 };
 
-export function PlayerDetails({ player }: { player: PlayerWithSkills }) {
-  const { user } = useUser();
+export function PlayerDetails({ player }: { player: Player }) {
+  const pathname = usePathname();
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
 
-  const onSave = async (playerId: number, skills: SelectSkillsSet) => {
+  const onSave = async (player: Player) => {
     const response = await fetch('/api/skills', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId, skills })
+      body: JSON.stringify(player)
     });
 
     if (!response.ok) {
@@ -41,69 +34,27 @@ export function PlayerDetails({ player }: { player: PlayerWithSkills }) {
     }
   };
 
-  const handleSave = async (updatedSkills: SelectSkillsSet) => {
-    await onSave(currentPlayer.id, updatedSkills);
-    setCurrentPlayer({ ...currentPlayer, skills: updatedSkills });
+  const handleSave = async (updatedPlayer: Player) => {
+    await onSave(updatedPlayer);
+    setCurrentPlayer(updatedPlayer);
     setIsEditing(false);
   };
 
   const skillCategories = [
-    {
-      title: 'Serving Skills',
-      skills: ['servingConsistency', 'servingPower', 'servingAccuracy']
-    },
-    {
-      title: 'Passing Skills',
-      skills: ['passingControl', 'passingPositioning', 'passingFirstContact']
-    },
-    {
-      title: 'Setting Skills',
-      skills: ['settingAccuracy', 'settingDecisionMaking', 'settingConsistency']
-    },
-    {
-      title: 'Hitting/Spiking Skills',
-      skills: [
-        'hittingSpikingPower',
-        'hittingSpikingPlacement',
-        'hittingSpikingTiming'
-      ]
-    },
-    {
-      title: 'Blocking Skills',
-      skills: [
-        'blockingTiming',
-        'blockingPositioning',
-        'blockingReadingAttacks'
-      ]
-    },
-    {
-      title: 'Defense/Digging Skills',
-      skills: ['defenseReactionTime', 'defenseFootwork', 'defenseBallControl']
-    },
-    {
-      title: 'Team Play Skills',
-      skills: [
-        'teamPlayCommunication',
-        'teamPlayPositionalAwareness',
-        'teamPlayAdaptability'
-      ]
-    },
-    {
-      title: 'Athleticism Skills',
-      skills: [
-        'athleticismSpeedAgility',
-        'athleticismVerticalJump',
-        'athleticismStamina'
-      ]
-    }
-  ];
+    { title: 'Serving Skills', skill: 'serving' },
+    { title: 'Passing Skills', skill: 'passing' },
+    { title: 'Blocking Skills', skill: 'blocking' },
+    { title: 'Hitting/Spiking Skills', skill: 'hittingSpiking' },
+    { title: 'Defense/Digging Skills', skill: 'defenseDigging' },
+    { title: 'Athleticism Skills', skill: 'athleticism' }
+  ] as const;
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{currentPlayer.name}</CardTitle>
         <Button
-          disabled={user?.sub !== currentPlayer.userId}
+          disabled={pathname !== '/settings'}
           onClick={() => setIsEditing(!isEditing)}
         >
           {isEditing ? 'Cancel' : 'Edit Skills'}
@@ -127,19 +78,23 @@ export function PlayerDetails({ player }: { player: PlayerWithSkills }) {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {category.skills.map((skill) => (
-                      <li key={skill} className="flex justify-between">
-                        <span className="capitalize">
-                          <b>{skill.replace(/([A-Z])/g, ' $1').trim()}</b>
-                        </span>
-                        <span>
-                          {currentPlayer.skills &&
-                          currentPlayer.skills[skill as keyof SelectSkillsSet]
-                            ? `${ratingMap[currentPlayer.skills[skill as keyof SelectSkillsSet]]} (${currentPlayer.skills[skill as keyof SelectSkillsSet]})`
-                            : 'N/A'}
-                        </span>
-                      </li>
-                    ))}
+                    <li key={category.skill} className="flex justify-between">
+                      <span className="capitalize">
+                        <b>
+                          {category.skill.replace(/([A-Z])/g, ' $1').trim()}
+                        </b>
+                      </span>
+                      <span>
+                        {
+                          // Convert the numeric skill value to the rating label
+                          ratingMap[
+                            currentPlayer[
+                              category.skill as keyof Player
+                            ].toString()
+                          ]
+                        }
+                      </span>
+                    </li>
                   </ul>
                 </CardContent>
               </Card>

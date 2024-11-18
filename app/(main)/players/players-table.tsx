@@ -16,27 +16,28 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Player } from './player';
-import { SelectPlayer } from '@/lib/db';
+import { Player as PlayerModel } from '@/lib/models';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function PlayersTable({
   players,
+  limit,
   offset,
   totalPlayers
 }: {
-  players: SelectPlayer[];
+  players: PlayerModel[];
+  limit: number;
   offset: number;
   totalPlayers: number;
 }) {
   const router = useRouter();
-  const playersPerPage = 5;
-  const currentPage = Math.ceil(offset / playersPerPage);
-  const totalPages = Math.ceil(totalPlayers / playersPerPage);
+  const currentPage = offset > 0 ? Math.ceil(offset / limit) : 1;
+  const totalPages = Math.ceil(totalPlayers / limit);
 
   const handlePageChange = (page: number) => {
-    const newOffset = (page - 1) * playersPerPage + 1;
+    const newOffset = (page - 1) * limit + 1;
     router.push(`/players/?offset=${newOffset}`, { scroll: false });
   };
 
@@ -67,8 +68,8 @@ export function PlayersTable({
           <div className="text-xs text-muted-foreground">
             Showing{' '}
             <strong>
-              {(currentPage - 1) * playersPerPage + 1}-
-              {Math.min(currentPage * playersPerPage, totalPlayers)}
+              {(currentPage - 1) * limit + 1}-
+              {Math.min(currentPage * limit, totalPlayers)}
             </strong>{' '}
             of <strong>{totalPlayers}</strong> players
           </div>

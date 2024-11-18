@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   if (!id) {
     return <PageError error={Error('Player not found!')}></PageError>;
   }
-  const player = await getPlayerById(Number(id));
+  const player = await getPlayerById(parseInt(id, 10));
 
   if (!player) {
     return <PageError error={Error('Player not found!')}></PageError>;

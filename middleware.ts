@@ -1,7 +1,6 @@
 import { withMiddlewareAuthRequired, getSession } from '@auth0/nextjs-auth0/edge';
 import { NextResponse } from 'next/server';
-import { db, players } from '@/lib/db';
-import { eq } from 'drizzle-orm';
+import { generateUserPlayer } from '@/lib/db';
 
 export default withMiddlewareAuthRequired(async function middleware(req) {
   const res = NextResponse.next();
@@ -11,33 +10,20 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
     return NextResponse.redirect('/api/auth/login');
   }
 
-  const playerId = req.cookies.get('id');
-  if (playerId && Number(playerId.value) > 0) {
+  const playerIdCookie = req.cookies.get('id');
+  if (playerIdCookie && Number(playerIdCookie.value) > 0) {
     return res;
   }
 
   const user = session!.user;
 
   // Check if the player exists, if not, add them
-  let player = await db
-    .select()
-    .from(players)
-    .where(eq(players.userId, user['sub']))
-    .limit(1);
-
-  if (player.length === 0) {
-    const newPlayer = {
-      userId: user['sub'],
-      name: user['name'],
-      configured: false
-    };
-    const result = await db.insert(players).values(newPlayer).returning();
-    player = result;
-  }
-  res.cookies.set('id', player[0].id.toString(), { path: '/' });
-  req.cookies.set('id', player[0].id.toString());
-  res.cookies.set('configured', player[0].configured.toString(), { path: '/' });
-  req.cookies.set('configured', player[0].configured.toString());
+  const playerId = await generateUserPlayer(user['sub'], user['name']);
+  
+  res.cookies.set('id', playerId.toString(), { path: '/' });
+  req.cookies.set('id', playerId.toString());
+  res.cookies.set('configured', 'false', { path: '/' });
+  req.cookies.set('configured', 'false');
   
   return res;
 });

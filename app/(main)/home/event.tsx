@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { SelectEvent } from '@/lib/db';
+import { Event } from '@/lib/models';
 
-export function EventDetails({ event }: { event: SelectEvent | null }) {
+export function EventDetails({ event }: { event: Event | null }) {
   if (!event) {
     return (
       <Card>
@@ -18,7 +18,8 @@ export function EventDetails({ event }: { event: SelectEvent | null }) {
       </CardHeader>
       <CardContent>
         <p>Location: {event.location}</p>
-        <p>Date: {event.date.toLocaleString()}</p>
+        <p>Start Time: {event.startTime.toLocaleString()}</p>
+        <p>End Time: {event.endTime.toLocaleString()}</p>
       </CardContent>
     </Card>
   );
