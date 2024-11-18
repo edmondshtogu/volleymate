@@ -49,16 +49,24 @@ export function PlayerDetails({ player }: { player: Player }) {
   };
 
   const skillCategories = [
-    { title: 'Serving Skills', skill: 'serving' },
-    { title: 'Passing Skills', skill: 'passing' },
-    { title: 'Blocking Skills', skill: 'blocking' },
-    { title: 'Hitting/Spiking Skills', skill: 'hittingSpiking' },
-    { title: 'Defense/Digging Skills', skill: 'defenseDigging' },
-    { title: 'Athleticism Skills', skill: 'athleticism' }
+    { title: 'Serving Skills', graph: 'Serve', skill: 'serving' },
+    { title: 'Passing Skills', graph: 'Pass', skill: 'passing' },
+    { title: 'Blocking Skills', graph: 'Block', skill: 'blocking' },
+    {
+      title: 'Hitting/Spiking Skills',
+      graph: 'Hit/Spike',
+      skill: 'hittingSpiking'
+    },
+    {
+      title: 'Defense/Digging Skills',
+      graph: 'Defense/Digg',
+      skill: 'defenseDigging'
+    },
+    { title: 'Athleticism Skills', graph: 'Athleticism', skill: 'athleticism' }
   ] as const;
 
   const chartData = skillCategories.map((category) => ({
-    subject: category.title,
+    subject: category.graph,
     A: currentPlayer[category.skill as keyof Player],
     fullMark: 5
   }));

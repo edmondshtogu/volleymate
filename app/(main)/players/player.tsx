@@ -8,13 +8,13 @@ import Link from 'next/link';
 export function Player({ player }: { player: PlayerModel }) {
   return (
     <TableRow>
-      <TableCell className="font-medium w-[80%]">{player.name}</TableCell>
-      <TableCell className="w-[15%]">
+      <TableCell className="font-medium w-full">{player.name}</TableCell>
+      <TableCell>
         <Badge variant="outline" className="capitalize">
           {player.configured ? 'configured' : 'not configured'}
         </Badge>
       </TableCell>
-      <TableCell className="w-[5%]">
+      <TableCell>
         <Button asChild size="sm" variant="ghost" className="w-full">
           <Link href={`/players/${player.id}`}>
             <Eye className="h-4 w-4" />

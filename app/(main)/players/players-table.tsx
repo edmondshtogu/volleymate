@@ -50,9 +50,9 @@ export function PlayersTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80%]">Name</TableHead>
-              <TableHead className="w-[15%]">Status</TableHead>
-              <TableHead className="w-[5%] text-right">Actions</TableHead>
+              <TableHead className="w-full">Name</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
