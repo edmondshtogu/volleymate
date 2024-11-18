@@ -84,6 +84,7 @@ export async function getPlayers(
 
   const totalPlayers = await db.select({ count: count() }).from(players);
   const filteredPlayers: Array<Player> = await selectPlayersQuery()
+    .orderBy(players.name)
     .limit(limit)
     .offset(offset);
 
