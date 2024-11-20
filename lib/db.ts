@@ -199,7 +199,7 @@ export async function updateParticipantWithdrawal(
         eq(participants.eventId, eventId),
         eq(participants.playerId, playerId)
       )
-    );
+  );
 }
 export async function isPlayerParticipatingEvent(
   eventId: number,
@@ -217,8 +217,7 @@ export async function isPlayerParticipatingEvent(
       )
     )
     .limit(1);
-
-  return participant.length < 1;
+  return participant.length === 1;
 }
 
 // Event Table
