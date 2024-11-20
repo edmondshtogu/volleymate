@@ -1,4 +1,7 @@
-import { withMiddlewareAuthRequired, getSession } from '@auth0/nextjs-auth0/edge';
+import {
+  withMiddlewareAuthRequired,
+  getSession
+} from '@auth0/nextjs-auth0/edge';
 import { NextResponse } from 'next/server';
 import { generateUserPlayer } from '@/lib/db';
 import {
@@ -6,7 +9,7 @@ import {
   setUserContextInRequest,
   setUserContextInResponse,
   userHasAdminRole
-} from "@/lib/user-context";
+} from '@/lib/user-context';
 
 export default withMiddlewareAuthRequired(async function middleware(req) {
   const res = NextResponse.next();
@@ -26,19 +29,22 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
   }
 
   // Generate new player_id and check admin roles
-  const [playerId, isConfigured] = await generateUserPlayer(user['sub'], user['name']);
+  const [playerId, isConfigured] = await generateUserPlayer(
+    user['sub'],
+    user['name']
+  );
   const isAdmin = await userHasAdminRole(user['sub']);
 
   // Create new state
   contextFromRequest = {
     playerId,
     isConfigured,
-    isAdmin,
+    isAdmin
   };
 
   // Save the state in cookies
   setUserContextInResponse(res, contextFromRequest);
   setUserContextInRequest(req, contextFromRequest);
-  
+
   return res;
 });

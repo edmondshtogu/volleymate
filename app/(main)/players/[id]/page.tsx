@@ -1,11 +1,6 @@
 import { getPlayerById } from '@/lib/db';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { getUserContextFromCookies } from "@/lib/user-context";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getUserContextFromCookies } from '@/lib/user-context';
 import PageError from './../../error';
 import { PlayerDetails } from '../player-details';
 
@@ -18,7 +13,7 @@ export default async function PlayerPage({
   const userCtx = await getUserContextFromCookies();
 
   if (!player || !userCtx) {
-    return <PageError error={Error("Player not found!")}></PageError>;
+    return <PageError error={Error('Player not found!')}></PageError>;
   }
 
   return (

@@ -16,7 +16,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Player } from './player';
-import {Player as PlayerModel} from '@/lib/models';
+import { Player as PlayerModel } from '@/lib/models';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export function PlayersTable({
           </TableHeader>
           <TableBody>
             {players.map((player) => (
-              <Player key={player.id} player={player}/>
+              <Player key={player.id} player={player} />
             ))}
           </TableBody>
         </Table>

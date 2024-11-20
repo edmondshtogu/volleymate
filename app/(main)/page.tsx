@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { getUpcomingEvent } from '@/lib/db';
-import { getUserContextFromCookies } from "@/lib/user-context";
+import { getUserContextFromCookies } from '@/lib/user-context';
 import { EventDetails } from './home/event';
 import { ParticipantsList } from './home/participants';
 import { InteractiveButtons } from './home/interactive-buttons';
@@ -12,7 +12,7 @@ export default async function Page() {
   if (!userContext?.playerId || !userContext?.isConfigured) {
     return <PageError error={Error('Player not found!')} />;
   }
-  
+
   const upcomingEvent = await getUpcomingEvent();
   const isParticipating = upcomingEvent?.participants.some(
     (p) => p.playerId === userContext?.playerId && !p.withdrewAt
@@ -36,7 +36,9 @@ export default async function Page() {
       <CardContent>
         <div className="space-y-4">
           <EventDetails event={upcomingEvent} userContext={userContext} />
-          <ParticipantsList participants={upcomingEvent?.participants ?? null} />
+          <ParticipantsList
+            participants={upcomingEvent?.participants ?? null}
+          />
         </div>
       </CardContent>
     </Card>

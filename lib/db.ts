@@ -11,7 +11,16 @@ import {
   serial,
   boolean
 } from 'drizzle-orm/pg-core';
-import { count, desc, eq, and, ilike, notInArray, sql } from 'drizzle-orm';
+import {
+  count,
+  desc,
+  eq,
+  and,
+  ilike,
+  notInArray,
+  sql,
+  isNull
+} from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { Player, Participant, Event } from './models';
 
@@ -93,9 +102,6 @@ export async function getPlayers(
     totalPlayers: totalPlayers[0].count
   };
 }
-export async function deletePlayerById(id: number) {
-  await db.delete(players).where(eq(players.id, id));
-}
 export async function isPlayerConfigured(id: number): Promise<boolean> {
   const filteredPlayers = await db
     .select({
@@ -121,7 +127,7 @@ export async function generateUserPlayer(
   let playersSelect = await db
     .select({
       id: players.id,
-        configured: players.configured
+      configured: players.configured
     })
     .from(players)
     .where(eq(players.userId, userId))
@@ -220,7 +226,10 @@ export const events = pgTable('volley_events', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   location: text('location').notNull(),
-  startTime: timestamp('start_time', { mode: 'string', precision: 3 }).notNull(),
+  startTime: timestamp('start_time', {
+    mode: 'string',
+    precision: 3
+  }).notNull(),
   endTime: timestamp('end_time', { mode: 'string', precision: 3 }).notNull()
 });
 const insertEventSchema = createInsertSchema(events);
@@ -256,7 +265,9 @@ export async function getUpcomingEvent(): Promise<Event | null> {
     })
     .from(participants)
     .innerJoin(players, eq(participants.playerId, players.id))
-    .where(eq(participants.eventId, event.id))
+    .where(
+      and(eq(participants.eventId, event.id), isNull(participants.withdrewAt))
+    )
     .orderBy(players.name)
     .limit(200);
 
@@ -268,15 +279,15 @@ export async function getUpcomingEvent(): Promise<Event | null> {
   };
 }
 export async function updateEvent(event: Event): Promise<void> {
-    await db
-        .update(events)
-        .set({
-            name: event.name,
-            location: event.location,
-            startTime: event.startTime.toString(),
-            endTime: event.endTime.toString()
-        })
-        .where(eq(events.id, event.id));
+  await db
+    .update(events)
+    .set({
+      name: event.name,
+      location: event.location,
+      startTime: event.startTime.toString(),
+      endTime: event.endTime.toString()
+    })
+    .where(eq(events.id, event.id));
 }
 export async function retainTop2Events() {
   const topEvents = await db
@@ -304,7 +315,8 @@ export async function addEvent(
     .insert(events)
     .values(
       insertEventSchema.parse({
-        name, location,
+        name,
+        location,
         startTime: startTime.toString(),
         endTime: endTime.toString()
       })

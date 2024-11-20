@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Player, UserContext } from '@/lib/models';
 import { PlayerSkillsForm } from './player-skills-form';
-import { editSkills } from "./actions";
+import { editSkills } from './actions';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const ratingMap: Record<string, string> = {
   '1': 'Beginner',
@@ -24,7 +26,13 @@ const ratingMap: Record<string, string> = {
   '5': 'Skilled'
 };
 
-export function PlayerDetails({ player, userContext }: { player: Player, userContext: UserContext }) {
+export function PlayerDetails({
+  player,
+  userContext
+}: {
+  player: Player;
+  userContext: UserContext;
+}) {
   const pathname = usePathname();
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
@@ -61,14 +69,29 @@ export function PlayerDetails({ player, userContext }: { player: Player, userCon
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{currentPlayer.name}</CardTitle>
-        {(pathname === '/settings' || userContext?.isAdmin) &&
-          (<Button onClick={() => setIsEditing(!isEditing)}>
+        <div>
+          <CardTitle>{currentPlayer.name}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Player <strong>#{currentPlayer.id}</strong>
+          </p>
+        </div>
+        {(pathname === '/settings' || userContext?.isAdmin) && (
+          <Button size="sm" onClick={() => setIsEditing(!isEditing)}>
             {isEditing ? 'Cancel' : 'Edit Skills'}
-          </Button>)
-        }
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
+        {!currentPlayer.configured && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Not Configured</AlertTitle>
+            <AlertDescription>
+              Skills have not been fully configured. Please edit the skills to
+              complete the configuration.
+            </AlertDescription>
+          </Alert>
+        )}
         {isEditing ? (
           <PlayerSkillsForm
             player={currentPlayer}
@@ -115,13 +138,11 @@ export function PlayerDetails({ player, userContext }: { player: Player, userCon
                           </b>
                         </span>
                         <span>
-                          {
-                            ratingMap[
-                              currentPlayer[
-                                category.skill as keyof Player
-                              ].toString()
-                            ]
-                          }
+                          {ratingMap[
+                            currentPlayer[
+                              category.skill as keyof Player
+                            ]?.toString() || '0'
+                          ] || 'Not set'}
                         </span>
                       </li>
                     </ul>

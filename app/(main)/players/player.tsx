@@ -10,7 +10,11 @@ export function Player({ player }: { player: PlayerModel }) {
     <TableRow>
       <TableCell className="font-medium w-full">{player.name}</TableCell>
       <TableCell className="text-center">
-          {player.configured ? (<BookCheck className='h-5 w-5'/>) : (<BookMinus className='h-5 w-5' color='red'/>)}
+        {player.configured ? (
+          <BookCheck className="h-5 w-5" />
+        ) : (
+          <BookMinus className="h-5 w-5" color="red" />
+        )}
       </TableCell>
       <TableCell>
         <Button asChild size="sm" variant="ghost" className="w-full">

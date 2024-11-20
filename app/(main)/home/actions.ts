@@ -4,16 +4,17 @@ import {
   insertParticipant,
   updateParticipantWithdrawal,
   isPlayerParticipatingEvent,
-  isPlayerConfigured, updateEvent
+  isPlayerConfigured,
+  updateEvent
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Event } from "@/lib/models";
-import { getUserContextFromCookies } from "@/lib/user-context";
+import { Event } from '@/lib/models';
+import { getUserContextFromCookies } from '@/lib/user-context';
 
 export async function editEvent(event: Event): Promise<void> {
   let userContextFromRequest = await getUserContextFromCookies();
-  if (!userContextFromRequest?.isAdmin){
+  if (!userContextFromRequest?.isAdmin) {
     return;
   }
 

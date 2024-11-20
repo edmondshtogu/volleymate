@@ -4,8 +4,8 @@ import { Analytics } from '@vercel/analytics/react';
 import { UserProvider } from '@auth0/nextjs-auth0/client';
 
 export const metadata = {
-  title: "VolleyMate",
-  description: "An application built to manage volleyball games.",
+  title: 'VolleyMate',
+  description: 'An application built to manage volleyball games.'
 };
 
 export default function RootLayout({

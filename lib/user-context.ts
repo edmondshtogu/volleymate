@@ -1,89 +1,100 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import {UserContext} from "@/lib/models";
+import { UserContext } from '@/lib/models';
 
 // Base64 encoding/decoding utility
 function base64Encode(value: any): string {
-    return Buffer.from(JSON.stringify(value)).toString('base64');
+  return Buffer.from(JSON.stringify(value)).toString('base64');
 }
 
 function base64Decode<T = any>(value: string): T | null {
-    try {
-        return JSON.parse(Buffer.from(value, 'base64').toString());
-    } catch {
-        return null;
-    }
+  try {
+    return JSON.parse(Buffer.from(value, 'base64').toString());
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserContextFromCookies(): Promise<UserContext | null> {
-    const cookieStore = await cookies();
-    const stateCookie = cookieStore.get('_uc');
-    if (!stateCookie) return null;
-    return base64Decode<UserContext>(stateCookie.value);
+  const cookieStore = await cookies();
+  const stateCookie = cookieStore.get('_uc');
+  if (!stateCookie) return null;
+  return base64Decode<UserContext>(stateCookie.value);
 }
 
-export function getUserContextFromRequest(req: NextRequest): UserContext | null {
-    const stateCookie = req.cookies.get('_uc');
-    if (!stateCookie) return null;
-    return base64Decode<UserContext>(stateCookie.value);
+export function getUserContextFromRequest(
+  req: NextRequest
+): UserContext | null {
+  const stateCookie = req.cookies.get('_uc');
+  if (!stateCookie) return null;
+  return base64Decode<UserContext>(stateCookie.value);
 }
 
-export async function setUserContextFromCookies(userContext: UserContext): Promise<void> {
-    const encodedState = base64Encode(userContext);
-    const cookieStore = await cookies();
-    cookieStore.set('_uc', encodedState, { path: '/', httpOnly: true, maxAge: 7 * 24 * 60 * 60 });
+export async function setUserContextFromCookies(
+  userContext: UserContext
+): Promise<void> {
+  const encodedState = base64Encode(userContext);
+  const cookieStore = await cookies();
+  cookieStore.set('_uc', encodedState, {
+    path: '/',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60
+  });
 }
 
 export function setUserContextInRequest(
-    req: NextRequest,
-    userContext: UserContext
+  req: NextRequest,
+  userContext: UserContext
 ): void {
-    const encodedState = base64Encode(userContext);
-    req.cookies.set('_uc', encodedState);
+  const encodedState = base64Encode(userContext);
+  req.cookies.set('_uc', encodedState);
 }
 
 export function setUserContextInResponse(
-    res: NextResponse,
-    userContext: UserContext
+  res: NextResponse,
+  userContext: UserContext
 ): void {
-    const encodedState = base64Encode(userContext);
-    res.cookies.set('_uc', encodedState, { path: '/', httpOnly: true, maxAge: 7 * 24 * 60 * 60 });
+  const encodedState = base64Encode(userContext);
+  res.cookies.set('_uc', encodedState, {
+    path: '/',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60
+  });
 }
 
 export async function userHasAdminRole(userId: string): Promise<boolean> {
-    const tokenResponse = await fetch(
-        `${process.env.AUTH0_ISSUER_BASE_URL}/oauth/token`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                audience: `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/`,
-                grant_type: "client_credentials",
-                client_id: process.env.AUTH0_CLIENT_ID,
-                client_secret: process.env.AUTH0_CLIENT_SECRET,
-            }),
-        }
-    );
+  const tokenResponse = await fetch(
+    `${process.env.AUTH0_ISSUER_BASE_URL}/oauth/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audience: `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/`,
+        grant_type: 'client_credentials',
+        client_id: process.env.AUTH0_CLIENT_ID,
+        client_secret: process.env.AUTH0_CLIENT_SECRET
+      })
+    }
+  );
 
-    const { access_token } = await tokenResponse.json();
+  const { access_token } = await tokenResponse.json();
 
-    const adminUsersResponse = await fetch(
-        `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/roles/rol_wXoAaU8cPWt3tfyl/users`,
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${access_token}`,
-            },
-        }
-    );
+  const adminUsersResponse = await fetch(
+    `${process.env.AUTH0_ISSUER_BASE_URL}/api/v2/roles/rol_wXoAaU8cPWt3tfyl/users`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${access_token}`
+      }
+    }
+  );
 
-    const adminUsers: Array<{
-        user_id: string
-    }> = await adminUsersResponse.json();
-    
-    const filtered = adminUsers.filter(user => user.user_id === userId);
+  const adminUsers: Array<{
+    user_id: string;
+  }> = await adminUsersResponse.json();
 
-    return filtered.length === 1;
+  const filtered = adminUsers.filter((user) => user.user_id === userId);
+
+  return filtered.length === 1;
 }
-

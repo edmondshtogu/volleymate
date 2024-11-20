@@ -203,6 +203,7 @@ export function PlayerSkillsForm({
       <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
         <Button
           type="button"
+          size="sm"
           variant="outline"
           onClick={onCancel}
           disabled={isSaving}
@@ -210,7 +211,12 @@ export function PlayerSkillsForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSaving} className="w-full sm:w-auto">
+        <Button
+          size="sm"
+          type="submit"
+          disabled={isSaving}
+          className="w-full sm:w-auto"
+        >
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

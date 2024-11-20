@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { getPlayerById } from '@/lib/db';
-import { getUserContextFromCookies } from "@/lib/user-context";
+import { getUserContextFromCookies } from '@/lib/user-context';
 import {
   Card,
   CardContent,
