@@ -4,10 +4,21 @@ import {
   insertParticipant,
   updateParticipantWithdrawal,
   isPlayerParticipatingEvent,
-  isPlayerConfigured
+  isPlayerConfigured, updateEvent
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { Event } from "@/lib/models";
+import { getUserContextFromCookies } from "@/lib/user-context";
+
+export async function editEvent(event: Event): Promise<void> {
+  let userContextFromRequest = await getUserContextFromCookies();
+  if (!userContextFromRequest?.isAdmin){
+    return;
+  }
+
+  await updateEvent(event);
+}
 
 export async function joinEvent(eventId: number, playerId: number) {
   // Check if the user is configured

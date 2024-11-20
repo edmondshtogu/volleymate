@@ -15,7 +15,6 @@ function base64Decode<T = any>(value: string): T | null {
     }
 }
 
-// Read state from cookies
 export async function getUserContextFromCookies(): Promise<UserContext | null> {
     const cookieStore = await cookies();
     const stateCookie = cookieStore.get('_uc');
@@ -29,20 +28,25 @@ export function getUserContextFromRequest(req: NextRequest): UserContext | null 
     return base64Decode<UserContext>(stateCookie.value);
 }
 
-// Set state cookie
+export async function setUserContextFromCookies(userContext: UserContext): Promise<void> {
+    const encodedState = base64Encode(userContext);
+    const cookieStore = await cookies();
+    cookieStore.set('_uc', encodedState, { path: '/', httpOnly: true, maxAge: 7 * 24 * 60 * 60 });
+}
+
 export function setUserContextInRequest(
     req: NextRequest,
-    state: UserContext
+    userContext: UserContext
 ): void {
-    const encodedState = base64Encode(state);
+    const encodedState = base64Encode(userContext);
     req.cookies.set('_uc', encodedState);
 }
 
 export function setUserContextInResponse(
     res: NextResponse,
-    state: UserContext
+    userContext: UserContext
 ): void {
-    const encodedState = base64Encode(state);
+    const encodedState = base64Encode(userContext);
     res.cookies.set('_uc', encodedState, { path: '/', httpOnly: true, maxAge: 7 * 24 * 60 * 60 });
 }
 

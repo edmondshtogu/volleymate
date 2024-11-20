@@ -8,9 +8,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {Event, UserContext} from '@/lib/models';
-import { format } from 'date-fns';
+import { Event, UserContext } from '@/lib/models';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { editEvent } from "./actions";
 
 export function EventDetails({ event: initialEvent, userContext }: { event: Event | null, userContext: UserContext }) {
   const [event, setEvent] = useState<Event | null>(initialEvent);
@@ -40,23 +41,13 @@ export function EventDetails({ event: initialEvent, userContext }: { event: Even
     if (editedEvent) {
       setIsSaving(true);
       try {
-        const response = await fetch('/api/events', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ...editedEvent,
-            participants: []
-          }),
+        await editEvent({
+          ...editedEvent,
+          participants: []
         });
 
-        if (response.ok) {
-          setEvent(editedEvent);
-          setIsEditing(false);
-        } else {
-          console.error('Failed to update event');
-        }
+        setEvent(editedEvent);
+        setIsEditing(false);
       } catch (error) {
         console.error('Error updating event:', error);
       } finally {

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Player, UserContext } from '@/lib/models';
 import { PlayerSkillsForm } from './player-skills-form';
+import { editSkills } from "./actions";
 
 const ratingMap: Record<string, string> = {
   '1': 'Beginner',
@@ -28,22 +29,8 @@ export function PlayerDetails({ player, userContext }: { player: Player, userCon
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
 
-  const onSave = async (player: Player) => {
-    const response = await fetch('/api/skills', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(player)
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Error saving skills:', error.message);
-      throw new Error(error.message);
-    }
-  };
-
   const handleSave = async (updatedPlayer: Player) => {
-    await onSave(updatedPlayer);
+    await editSkills(updatedPlayer);
     setCurrentPlayer(updatedPlayer);
     setIsEditing(false);
   };

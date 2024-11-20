@@ -1,10 +1,21 @@
 'use server';
 
-import { deletePlayerById } from '@/lib/db';
-import { revalidatePath } from 'next/cache';
+import { getUserContextFromCookies, setUserContextFromCookies } from "@/lib/user-context";
+import { updatePlayerSkills } from '@/lib/db';
+import { Player } from "@/lib/models";
 
-export async function deletePlayer(formData: FormData) {
-  let id = Number(formData.get('player_id'));
-  await deletePlayerById(id);
-  revalidatePath('/');
+export async function editSkills(player: Player): Promise<void> {
+  let userContextFromRequest = await getUserContextFromCookies();
+  if (!userContextFromRequest?.isAdmin && userContextFromRequest?.playerId !== player.id){
+    return;
+  }
+
+  await updatePlayerSkills(player);
+  
+  userContextFromRequest = {
+    ...userContextFromRequest!,
+    isConfigured: true,
+  }
+
+  await setUserContextFromCookies(userContextFromRequest);
 }
