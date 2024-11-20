@@ -1,6 +1,12 @@
 import { withMiddlewareAuthRequired, getSession } from '@auth0/nextjs-auth0/edge';
 import { NextResponse } from 'next/server';
 import { generateUserPlayer } from '@/lib/db';
+import {
+  getUserContextFromRequest,
+  setUserContextInRequest,
+  setUserContextInResponse,
+  userHasAdminRole
+} from "@/lib/user-context";
 
 export default withMiddlewareAuthRequired(async function middleware(req) {
   const res = NextResponse.next();
@@ -10,20 +16,29 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
     return NextResponse.redirect('/api/auth/login');
   }
 
-  const playerIdCookie = req.cookies.get('player_id');
-  if (playerIdCookie && Number(playerIdCookie.value) > 0) {
-    return res;
-  }
-
   const user = session!.user;
 
-  // Check if the player exists, if not, add them
-  const playerId = await generateUserPlayer(user['sub'], user['name']);
-  
-  res.cookies.set('player_id', playerId.toString(), { path: '/' });
-  req.cookies.set('player_id', playerId.toString());
-  res.cookies.set('player_configured', 'false', { path: '/' });
-  req.cookies.set('player_configured', 'false');
+  // Read the state from the request
+  let contextFromRequest = getUserContextFromRequest(req);
+
+  if (contextFromRequest && contextFromRequest.playerId > 0) {
+    return res; // State already exists, proceed
+  }
+
+  // Generate new player_id and check admin roles
+  const [playerId, isConfigured] = await generateUserPlayer(user['sub'], user['name']);
+  const isAdmin = await userHasAdminRole(user['sub']);
+
+  // Create new state
+  contextFromRequest = {
+    playerId,
+    isConfigured,
+    isAdmin,
+  };
+
+  // Save the state in cookies
+  setUserContextInResponse(res, contextFromRequest);
+  setUserContextInRequest(req, contextFromRequest);
   
   return res;
 });

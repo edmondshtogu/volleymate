@@ -1,3 +1,9 @@
+export interface UserContext {
+  playerId: number;
+  isConfigured: boolean;
+  isAdmin: boolean;
+}
+
 export enum SkillScale {
   Beginner = 1,
   Developing = 2,

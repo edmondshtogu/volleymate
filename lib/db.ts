@@ -116,18 +116,19 @@ export async function isPlayerConfigured(id: number): Promise<boolean> {
 export async function generateUserPlayer(
   userId: string,
   name: string
-): Promise<number> {
+): Promise<[number, boolean]> {
   // Check if the player exists, if not, add them
   let playersSelect = await db
     .select({
-      id: players.id
+      id: players.id,
+        configured: players.configured
     })
     .from(players)
     .where(eq(players.userId, userId))
     .limit(1);
 
   if (playersSelect.length === 1) {
-    return playersSelect[0].id;
+    return [playersSelect[0].id, playersSelect[0].configured];
   }
   const newPlayer = insertPlayerSchema.parse({
     userId: userId,
@@ -138,7 +139,7 @@ export async function generateUserPlayer(
     id: players.id
   });
 
-  return insertResult[0].id;
+  return [insertResult[0].id, false];
 }
 export async function updatePlayerSkills(player: Player): Promise<void> {
   await db

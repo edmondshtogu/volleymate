@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { getUserContextFromCookies } from "@/lib/user-context";
 import PageError from './../../error';
 import { PlayerDetails } from '../player-details';
 
@@ -14,8 +15,9 @@ export default async function PlayerPage({
   params: Promise<{ id: string }>;
 }) {
   const player = await getPlayerById(Number((await params).id));
+  const userCtx = await getUserContextFromCookies();
 
-  if (!player) {
+  if (!player || !userCtx) {
     return <PageError error={Error("Player not found!")}></PageError>;
   }
 
@@ -25,7 +27,7 @@ export default async function PlayerPage({
         <CardTitle>Player Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <PlayerDetails player={player} />
+        <PlayerDetails player={player} userContext={userCtx} />
       </CardContent>
     </Card>
   );

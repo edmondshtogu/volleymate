@@ -2,10 +2,6 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Player } from '@/lib/models';
-import { PlayerSkillsForm } from './player-skills-form';
 import {
   Radar,
   RadarChart,
@@ -14,6 +10,10 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer
 } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Player, UserContext } from '@/lib/models';
+import { PlayerSkillsForm } from './player-skills-form';
 
 const ratingMap: Record<string, string> = {
   '1': 'Beginner',
@@ -23,7 +23,7 @@ const ratingMap: Record<string, string> = {
   '5': 'Skilled'
 };
 
-export function PlayerDetails({ player }: { player: Player }) {
+export function PlayerDetails({ player, userContext }: { player: Player, userContext: UserContext }) {
   const pathname = usePathname();
   const [isEditing, setIsEditing] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
@@ -75,12 +75,11 @@ export function PlayerDetails({ player }: { player: Player }) {
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>{currentPlayer.name}</CardTitle>
-        <Button
-          disabled={pathname !== '/settings'}
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? 'Cancel' : 'Edit Skills'}
-        </Button>
+        {(pathname === '/settings' || userContext?.isAdmin) &&
+          (<Button onClick={() => setIsEditing(!isEditing)}>
+            {isEditing ? 'Cancel' : 'Edit Skills'}
+          </Button>)
+        }
       </CardHeader>
       <CardContent>
         {isEditing ? (

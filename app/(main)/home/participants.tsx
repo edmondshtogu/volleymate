@@ -106,11 +106,11 @@ export function ParticipantsList({
                         {participant.withdrewAt ? (
                           <>
                             <s>{participant.name}</s>(
-                            {participant.withdrewAt?.toLocaleDateString()})
+                            {participant.withdrewAt?.toLocaleDateString()}) - ({(participant.skillsScore / 6).toFixed(1)})
                           </>
                         ) : (
                           participant.name
-                        )}
+                        )} - ({(participant.skillsScore / 6).toFixed(1)})
                       </li>
                     ))}
                   </ul>
