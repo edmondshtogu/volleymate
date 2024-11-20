@@ -45,7 +45,10 @@ export function EventDetails({ event: initialEvent, userContext }: { event: Even
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(editedEvent),
+          body: JSON.stringify({
+            ...editedEvent,
+            participants: []
+          }),
         });
 
         if (response.ok) {
