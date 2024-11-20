@@ -7,15 +7,15 @@ import { InteractiveButtons } from './home/interactive-buttons';
 import PageError from './error';
 
 export default async function Page() {
-  let context = await getUserContextFromCookies();
+  let userContext = await getUserContextFromCookies();
 
-  if (!context?.playerId || !context?.isConfigured) {
+  if (!userContext?.playerId || !userContext?.isConfigured) {
     return <PageError error={Error('Player not found!')} />;
   }
   
   const upcomingEvent = await getUpcomingEvent();
   const isParticipating = upcomingEvent?.participants.some(
-    (p) => p.playerId === context?.playerId && !p.withdrewAt
+    (p) => p.playerId === userContext?.playerId && !p.withdrewAt
   );
 
   return (
@@ -26,16 +26,16 @@ export default async function Page() {
           {upcomingEvent && (
             <InteractiveButtons
               eventId={upcomingEvent.id}
-              currentUserId={context?.playerId}
+              currentUserId={userContext?.playerId}
               isParticipating={isParticipating ?? false}
-              isConfigured={context?.isConfigured}
+              isConfigured={userContext?.isConfigured}
             />
           )}
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <EventDetails event={upcomingEvent} />
+          <EventDetails event={upcomingEvent} userContext={userContext} />
           <ParticipantsList participants={upcomingEvent?.participants ?? null} />
         </div>
       </CardContent>

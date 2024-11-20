@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@auth0/nextjs-auth0';
 import { updatePlayerSkills } from '@/lib/db';
 import { Player } from '@/lib/models';
-import { getStateFromRequest, setStateInResponse } from "@/lib/user-state";
+import { getUserContextFromRequest, setUserContextInResponse } from "@/lib/user-context";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -15,22 +15,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const player: Player = await req.json();
+    let userContextFromRequest = getUserContextFromRequest(req);
+    if (!userContextFromRequest?.isAdmin && userContextFromRequest?.playerId !== player.id){
+      NextResponse.json(
+          { success: false, message: 'Unauthorized' },
+          { status: 403 }
+      );
+    }
 
     await updatePlayerSkills(player);
 
     // Set "configured" cookie
     const response = NextResponse.json({ success: true });
 
-    // Read the state from the request
-    let state = getStateFromRequest(req);
-    // Create new state
-    state = {
-      ...state!,
+    userContextFromRequest = {
+      ...userContextFromRequest!,
       isConfigured: true,
     }
     
     // Save the state in cookies
-    setStateInResponse(response, state);
+    setUserContextInResponse(response, userContextFromRequest);
     return response;
   } catch (error) {
     console.error('Error saving skills:', error);

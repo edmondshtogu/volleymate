@@ -220,8 +220,8 @@ export const events = pgTable('volley_events', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   location: text('location').notNull(),
-  startTime: timestamp('start_time').notNull(),
-  endTime: timestamp('end_time').notNull()
+  startTime: timestamp('start_time', { mode: 'string', precision: 3 }).notNull(),
+  endTime: timestamp('end_time', { mode: 'string', precision: 3 }).notNull()
 });
 const insertEventSchema = createInsertSchema(events);
 export async function getUpcomingEvent(): Promise<Event | null> {
@@ -262,8 +262,21 @@ export async function getUpcomingEvent(): Promise<Event | null> {
 
   return {
     ...event,
+    startTime: new Date(event.startTime),
+    endTime: new Date(event.endTime),
     participants: eventParticipants
   };
+}
+export async function updateEvent(event: Event): Promise<void> {
+    await db
+        .update(events)
+        .set({
+            name: event.name,
+            location: event.location,
+            startTime: event.startTime.toString(),
+            endTime: event.endTime.toString()
+        })
+        .where(eq(events.id, event.id));
 }
 export async function retainTop2Events() {
   const topEvents = await db
@@ -291,10 +304,9 @@ export async function addEvent(
     .insert(events)
     .values(
       insertEventSchema.parse({
-        name,
-        location,
-        startTime,
-        endTime
+        name, location,
+        startTime: startTime.toString(),
+        endTime: endTime.toString()
       })
     )
     .returning({
