@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Loader2, X, Save } from 'lucide-react';
+import { Edit, Loader2, X, Save, Star } from 'lucide-react';
 import { Participant, UserContext } from '@/lib/models';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -288,7 +288,7 @@ export function ParticipantsList({
                     <CardTitle>Team {index + 1}</CardTitle>
                     <CardDescription>
                       <Badge variant="outline" className="capitalize">
-                        {teamPercentage.toFixed(0)}% Team Balance
+                        {teamPercentage.toFixed(0)}% Team Score
                       </Badge>
                     </CardDescription>
                   </CardHeader>
@@ -296,8 +296,7 @@ export function ParticipantsList({
                     {team.map((participant) => (
                       <li key={participant.playerId} className="text-sm">
                         <Badge variant="outline" className="capitalize">
-                          {participant.name} (
-                          {(participant.skillsScore / 6).toFixed(1)} skills)
+                          {participant.name} - {(participant.skillsScore / 6).toFixed(1)}<Star className='w-3 h-3 filled'/>
                         </Badge>
                       </li>
                     ))}
