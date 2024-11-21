@@ -115,7 +115,8 @@ export async function searchPlayers(
       return eq(players.id, id);
     } else {
       // Otherwise, search by name
-      return ilike(players.name, `%${term.trim()}%`);
+      console.log(`%${term}%`);
+      return ilike(players.name, `%${term}%`);
     }
   });
 
@@ -247,6 +248,28 @@ export async function isPlayerParticipatingEvent(
     .limit(1);
   return participant.length === 1;
 }
+export async function getEventParticipants(eventId: number): Promise<Array<Participant>> {
+  return await db
+    .select({
+      playerId: players.id,
+      name: players.name,
+      skillsScore: sql<number>`
+      ${players.serving} + 
+      ${players.passing} + 
+      ${players.blocking} + 
+      ${players.hittingSpiking} + 
+      ${players.defenseDigging} + 
+      ${players.athleticism}`,
+      withdrewAt: participants.withdrewAt
+    })
+    .from(participants)
+    .innerJoin(players, eq(participants.playerId, players.id))
+    .where(
+      and(eq(participants.eventId, eventId), isNull(participants.withdrewAt))
+    )
+    .orderBy(players.name)
+    .limit(200);
+}
 
 // Event Table
 export const events = pgTable('volley_events', {
@@ -277,26 +300,7 @@ export async function getUpcomingEvent(): Promise<Event | null> {
   }
   const event = filteredEvents[0];
 
-  const eventParticipants: Participant[] = await db
-    .select({
-      playerId: players.id,
-      name: players.name,
-      skillsScore: sql<number>`
-      ${players.serving} + 
-      ${players.passing} + 
-      ${players.blocking} + 
-      ${players.hittingSpiking} + 
-      ${players.defenseDigging} + 
-      ${players.athleticism}`,
-      withdrewAt: participants.withdrewAt
-    })
-    .from(participants)
-    .innerJoin(players, eq(participants.playerId, players.id))
-    .where(
-      and(eq(participants.eventId, event.id), isNull(participants.withdrewAt))
-    )
-    .orderBy(players.name)
-    .limit(200);
+  const eventParticipants = await getEventParticipants(event.id);
 
   return {
     ...event,

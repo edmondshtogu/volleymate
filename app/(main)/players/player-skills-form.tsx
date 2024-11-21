@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2, Info, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -223,7 +223,10 @@ export function PlayerSkillsForm({
               Saving...
             </>
           ) : (
-            'Save Changes'
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </>
           )}
         </Button>
       </div>

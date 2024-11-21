@@ -37,7 +37,9 @@ export default async function Page() {
         <div className="space-y-4">
           <EventDetails event={upcomingEvent} userContext={userContext} />
           <ParticipantsList
+            eventId={upcomingEvent?.id}
             participants={upcomingEvent?.participants ?? null}
+            userContext={userContext}
           />
         </div>
       </CardContent>

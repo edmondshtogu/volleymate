@@ -12,11 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Edit, X } from 'lucide-react';
-import { Participant } from '@/lib/models';
+import { Edit, Loader2, X, Save } from 'lucide-react';
+import { Participant, UserContext } from '@/lib/models';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { getPossibleParticipants } from './actions';
+import {
+  searchPlayers,
+  joinEvent,
+  leaveEvent,
+  getParticipants
+} from './actions';
 
 function distributePlayers(
   participants: Participant[],
@@ -59,11 +64,15 @@ function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5): number[] {
 }
 
 export type ParticipantsParam = {
+  eventId: number | undefined;
   participants: Participant[] | null;
+  userContext: UserContext;
 };
 
 export function ParticipantsList({
-  participants: initialParticipants
+  eventId,
+  participants: initialParticipants,
+  userContext
 }: ParticipantsParam) {
   const [participants, setParticipants] = useState<Participant[] | null>(
     initialParticipants
@@ -74,6 +83,8 @@ export function ParticipantsList({
   const [error, setError] = useState<string | null>(null);
   const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!participants || participants.length === 0) {
@@ -92,6 +103,7 @@ export function ParticipantsList({
     setError(null);
     setTempParticipants([]);
     setHasChanges(false);
+    setShowBadges(false);
   };
 
   const handleNext = async () => {
@@ -101,27 +113,41 @@ export function ParticipantsList({
         .map((term) =>
           term
             .trim()
-            .replace(/\s+/g, '')
+            .replace(/[\u00A0\u200C\u200B\u202F\u2060\u2064]/g, ' ')
+            .replace(/\s+/g, ' ')
             .replace(/^\d+\.\s*/, '')
             .toLowerCase()
             .trim()
         )
         .filter((term) => term);
-      const newParticipants = (await getPossibleParticipants(
+      const newParticipants = (await searchPlayers(
         searchTerms
       )) as Participant[];
       console.log('newParticipants', newParticipants);
       setTempParticipants(newParticipants);
+      setShowBadges(true); // Show badges when data is fetched
       setHasChanges(true);
     }
   };
 
-  const handleSave = () => {
-    setParticipants(tempParticipants);
+  const handleSave = async () => {
+    setIsLoading(true); // Start loading
+    for (let i = 0; i < tempParticipants.length; i++) {
+      const p = tempParticipants[i];
+      if (participants?.find((i) => i.playerId === p.playerId)) {
+        await leaveEvent(eventId!, p.playerId);
+      } else {
+        await joinEvent(eventId!, p.playerId, true);
+      }
+    }
+
+    setParticipants(await getParticipants(eventId!));
     setIsEditing(false);
     setBulkParticipants('');
     setError(null);
     setHasChanges(false);
+    setShowBadges(false);
+    setIsLoading(false); // Stop loading
   };
 
   const removeParticipant = (playerId: number) => {
@@ -133,7 +159,7 @@ export function ParticipantsList({
     return (
       <div className="flex items-center mb-4">
         <CardTitle>Participants</CardTitle>
-        {!isEditing && (
+        {!isEditing && userContext?.isAdmin && (
           <Button size="sm" onClick={handleEdit} className="ml-auto">
             <Edit className="h-4 w-4 mr-2" />
             Edit
@@ -163,7 +189,7 @@ export function ParticipantsList({
             </div>
           </RadioGroup>
         )}
-        {editMode === 'bulk' ? (
+        {editMode === 'bulk' && !showBadges ? (
           <Textarea
             placeholder="Enter participant names, one per line"
             value={bulkParticipants}
@@ -190,13 +216,29 @@ export function ParticipantsList({
           </ScrollArea>
         )}
         <div className="flex space-x-2">
-          {editMode === 'bulk' && bulkParticipants.trim() !== '' ? (
+          {editMode === 'bulk' &&
+          !showBadges &&
+          bulkParticipants.trim() !== '' ? (
             <Button size="sm" onClick={handleNext}>
               Next
             </Button>
           ) : (
-            <Button size="sm" onClick={handleSave} disabled={!hasChanges}>
-              Save
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!hasChanges || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save
+                </>
+              )}
             </Button>
           )}
           <Button size="sm" variant="outline" onClick={handleCancel}>
@@ -245,26 +287,20 @@ export function ParticipantsList({
                   <CardHeader>
                     <CardTitle>Team {index + 1}</CardTitle>
                     <CardDescription>
-                      Score: {teamPercentage.toFixed(1)} / 100%
+                      <Badge variant="outline" className="capitalize">
+                        {teamPercentage.toFixed(0)}% Team Balance
+                      </Badge>
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul>
-                      {team.map((participant) => (
-                        <li key={participant.playerId} className="text-sm">
-                          {participant.withdrewAt ? (
-                            <>
-                              <s>{participant.name}</s>(
-                              {participant.withdrewAt?.toLocaleDateString()}) -
-                              ({(participant.skillsScore / 6).toFixed(1)})
-                            </>
-                          ) : (
-                            participant.name
-                          )}{' '}
-                          - ({(participant.skillsScore / 6).toFixed(1)})
-                        </li>
-                      ))}
-                    </ul>
+                    {team.map((participant) => (
+                      <li key={participant.playerId} className="text-sm">
+                        <Badge variant="outline" className="capitalize">
+                          {participant.name} (
+                          {(participant.skillsScore / 6).toFixed(1)} skills)
+                        </Badge>
+                      </li>
+                    ))}
                   </CardContent>
                 </Card>
               );

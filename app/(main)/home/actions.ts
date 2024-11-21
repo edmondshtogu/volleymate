@@ -6,7 +6,8 @@ import {
   isPlayerParticipatingEvent,
   isPlayerConfigured,
   updateEvent,
-  searchPlayers
+  searchPlayers as dbSearchPlayers,
+  getEventParticipants
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -22,13 +23,19 @@ export async function editEvent(event: Event): Promise<void> {
   await updateEvent(event);
 }
 
-export async function joinEvent(eventId: number, playerId: number) {
-  // Check if the user is configured
-  const isConfigured = await isPlayerConfigured(playerId);
+export async function joinEvent(
+  eventId: number,
+  playerId: number,
+  skipCheckConfigured?: boolean
+) {
+  if (!skipCheckConfigured) {
+    // Check if the user is configured
+    const isConfigured = await isPlayerConfigured(playerId);
 
-  if (!isConfigured) {
-    // If not configured, redirect to the settings page
-    redirect('/settings');
+    if (!isConfigured) {
+      // If not configured, redirect to the settings page
+      redirect('/settings');
+    }
   }
 
   const existing = await isPlayerParticipatingEvent(eventId, playerId);
@@ -46,8 +53,12 @@ export async function leaveEvent(eventId: number, playerId: number) {
   revalidatePath('/');
 }
 
-export async function getPossibleParticipants(
+export async function searchPlayers(
   searchTerms: string[]
 ): Promise<Array<SearchPlayerResult>> {
-  return await searchPlayers(searchTerms);
+  return await dbSearchPlayers(searchTerms);
+}
+
+export async function getParticipants(eventId: number) {
+  return await getEventParticipants(eventId);
 }

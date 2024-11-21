@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { MinusCircle, PlusCircle } from 'lucide-react';
+import { MinusCircle, PlusCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,21 +31,33 @@ export function InteractiveButtons({
   isConfigured
 }: Props) {
   const [participating, setParticipating] = useState(isParticipating);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const router = useRouter();
 
   const handleJoin = async () => {
     if (!isConfigured) {
-      // Redirect to /settings if not configured
       router.push('/settings');
       return;
     }
-    await joinEvent(eventId, currentUserId);
-    setParticipating(true);
+
+    setIsJoining(true);
+    try {
+      await joinEvent(eventId, currentUserId);
+      setParticipating(true);
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   const handleWithdraw = async () => {
-    await leaveEvent(eventId, currentUserId);
-    setParticipating(false);
+    setIsWithdrawing(true);
+    try {
+      await leaveEvent(eventId, currentUserId);
+      setParticipating(false);
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   return (
@@ -53,8 +65,17 @@ export function InteractiveButtons({
       {participating ? (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="destructive" className="h-8 gap-1">
-              <MinusCircle className="h-3.5 w-3.5" />
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8 gap-1"
+              disabled={isWithdrawing}
+            >
+              {isWithdrawing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <MinusCircle className="h-3.5 w-3.5" />
+              )}
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                 Can't make it this time?
               </span>
@@ -71,15 +92,27 @@ export function InteractiveButtons({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleWithdraw}>
-                Withdraw
+              <AlertDialogAction
+                onClick={handleWithdraw}
+                disabled={isWithdrawing}
+              >
+                {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       ) : (
-        <Button size="sm" className="h-8 gap-1" onClick={handleJoin}>
-          <PlusCircle className="h-3.5 w-3.5" />
+        <Button
+          size="sm"
+          className="h-8 gap-1"
+          onClick={handleJoin}
+          disabled={isJoining}
+        >
+          {isJoining ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <PlusCircle className="h-3.5 w-3.5" />
+          )}
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
             Join event
           </span>
