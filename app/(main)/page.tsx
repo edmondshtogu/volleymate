@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { getUpcomingEvent } from '@/lib/db';
 import { getUserContextFromCookies } from '@/lib/user-context';
-import { EventDetails } from './home/event';
+import { EventDetails } from './home/event-details';
 import { ParticipantsList } from './home/participants';
 import { InteractiveButtons } from './home/interactive-buttons';
 import PageError from './error';

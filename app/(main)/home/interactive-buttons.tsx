@@ -76,8 +76,8 @@ export function InteractiveButtons({
               ) : (
                 <MinusCircle className="h-3.5 w-3.5" />
               )}
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                Can't make it this time?
+              <span className="sm:whitespace-nowrap">
+                Withdraw
               </span>
             </Button>
           </AlertDialogTrigger>
@@ -113,8 +113,8 @@ export function InteractiveButtons({
           ) : (
             <PlusCircle className="h-3.5 w-3.5" />
           )}
-          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Join event
+          <span className="whitespace-nowrap">
+            Join
           </span>
         </Button>
       )}
