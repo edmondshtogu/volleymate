@@ -90,3 +90,39 @@ input[type='search']::-moz-search-cancel-button {
 input[type='search']::-ms-clear {
   display: none;
 }
+
+
+ol {
+  list-style-type: decimal;
+}
+
+/* .squad-score span:first-child {
+  font-size: 2.25rem;
+  line-height: 2.25rem;
+} */
+
+.team-box {
+  width: calc(100% - 1rem);
+}  
+
+@media screen and (min-width: 768px) {
+  .team-box {
+    width: calc(50% - 1rem);
+  }
+}
+
+@media screen and (min-width: 1440px) {
+  .team-box {
+    width: calc(25% - 1rem);
+  }
+}
+
+.squad-score {
+  display: flex;
+  align-items: flex-end;
+  padding-left: 0;
+}
+
+.players-list li {
+  border-bottom: 1px solid rgb(217 217 217);
+}
