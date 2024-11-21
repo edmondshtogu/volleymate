@@ -115,7 +115,7 @@ export async function searchPlayers(
       return eq(players.id, id);
     } else {
       // Otherwise, search by name
-      return ilike(players.name, `%${term}%`);
+      return ilike(players.name, `%${term.trim()}%`);
     }
   });
 

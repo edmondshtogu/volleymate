@@ -98,11 +98,14 @@ export function ParticipantsList({
     if (editMode === 'bulk') {
       const searchTerms = bulkParticipants
         .split('\n')
-        .map((term) => {
-          let searchTerm = term.trim().replace(/^\d+\.\s*/, '').replace(' ', '');
-          searchTerm = searchTerm.trim();
-          return searchTerm;
-        })
+        .map((term) =>
+          term
+            .trim()
+            .replace(/\s+/g, '')
+            .replace(/^\d+\.\s*/, '')
+            .toLowerCase()
+            .trim()
+        )
         .filter((term) => term);
       const newParticipants = (await getPossibleParticipants(
         searchTerms
