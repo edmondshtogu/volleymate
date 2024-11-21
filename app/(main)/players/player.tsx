@@ -8,7 +8,14 @@ import Link from 'next/link';
 export function Player({ player }: { player: PlayerModel }) {
   return (
     <TableRow>
-      <TableCell className="font-medium w-full">{player.name}</TableCell>
+      <TableCell className="font-medium w-full">
+        {player.id.toString().length === 1 ? (
+          <>#0{player.id}&nbsp;</>
+        ) : (
+          <>#{player.id}&nbsp;</>
+        )}
+        {player.name}
+      </TableCell>
       <TableCell className="text-center">
         {player.configured ? (
           <BookCheck className="h-5 w-5" />

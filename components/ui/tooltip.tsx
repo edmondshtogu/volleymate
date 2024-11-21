@@ -12,26 +12,31 @@ const TooltipTrigger = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Trigger>
 >(({ children, ...props }, ref) => {
+  const [isOpen, setIsOpen] = React.useState(false);
   const [isTouch, setIsTouch] = React.useState(false);
 
-  // Detect if the user is using a touchscreen
   React.useEffect(() => {
     const handleTouchStart = () => setIsTouch(true);
-    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchstart', handleTouchStart, { once: true });
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
     };
   }, []);
 
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isTouch) {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
   return (
     <TooltipPrimitive.Trigger
       ref={ref}
       {...props}
-      onClick={(e) => {
-        if (isTouch) {
-          e.preventDefault(); // Prevent navigation or other default actions
-        }
-      }}
+      onClick={handleInteraction}
+      onTouchStart={handleInteraction}
+      aria-expanded={isOpen}
     >
       {children}
     </TooltipPrimitive.Trigger>
