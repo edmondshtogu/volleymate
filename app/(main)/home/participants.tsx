@@ -282,24 +282,47 @@ export function ParticipantsList({
               );
               const maxTeamScore = team.length * 6 * 5;
               const teamPercentage = (teamScore / maxTeamScore) * 100;
+
+              const backgroundColors = [
+                'bg-red-50/30',
+                'bg-yellow-50/30',
+                'bg-green-50/30',
+                'bg-blue-50/30',
+                'bg-indigo-50/30',
+                'bg-purple-50/30',
+                'bg-pink-50/30',
+                'bg-gray-50/30',
+              ];
               return (
-                <Card key={index} className="w-full flex-grow">
+                <Card key={index} className={`team-box ${backgroundColors[index]}`}>
                   <CardHeader>
-                    <CardTitle>Team {index + 1}</CardTitle>
+                    <CardTitle className='tracking-tight text-2xl font-bold'>Team {index + 1}</CardTitle>
                     <CardDescription>
-                      <Badge variant="outline" className="capitalize">
-                        {teamPercentage.toFixed(0)}% Team Score
+                      <Badge variant="outline" className="capitalize squad-score">
+                          <span className='text-4xl font-bold'>
+                            {`${teamPercentage.toFixed(0)}`}
+                            <span className='text-xl font-semibold ml-1'>%</span>
+                          </span>
+                         <span className="text-sm text-gray-500 ml-2">Team Score</span>
                       </Badge>
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    {team.map((participant) => (
-                      <li key={participant.playerId} className="text-sm">
-                        <Badge variant="outline" className="capitalize">
-                          {participant.name} - {(participant.skillsScore / 6).toFixed(1)}<Star className='w-3 h-3 filled'/>
-                        </Badge>
-                      </li>
-                    ))}
+                  <CardContent className='players-list'>
+                    <ol>
+                      {team.map((participant, i) => (
+                        <li key={participant.playerId} className="flex items-center justify-between py-1 border-b border-gray-100 last:border-b-0">
+                          <span className="font-medium">
+                            <span className="inline-block w-6 text-gray-500">{i + 1}.</span>
+                            {participant.name}
+                          </span>
+                          <div className="flex items-center">
+                            <span className="mr-1 font-semibold">{(participant.skillsScore / 6).toFixed(1)}</span>
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+
                   </CardContent>
                 </Card>
               );
