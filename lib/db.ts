@@ -17,12 +17,13 @@ import {
   eq,
   and,
   ilike,
+  or,
   notInArray,
   sql,
   isNull
 } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { Player, Participant, Event } from './models';
+import { Player, Participant, Event, SearchPlayerResult } from './models';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
@@ -101,6 +102,33 @@ export async function getPlayers(
     players: filteredPlayers,
     totalPlayers: totalPlayers[0].count
   };
+}
+export async function searchPlayers(
+  searchTerms: string[]
+): Promise<Array<SearchPlayerResult>> {
+  const whereClause = searchTerms.map((term) => {
+    const idMatch = term.match(/#(\d+)/);
+
+    if (idMatch) {
+      // If the term has # followed by a number, search by ID
+      const id = parseInt(idMatch[1], 10);
+      return eq(players.id, id);
+    } else {
+      // Otherwise, search by name
+      return ilike(players.name, `%${term}%`);
+    }
+  });
+
+  const data = await db
+    .select({
+      playerId: players.id,
+      name: players.name
+    })
+    .from(players)
+    .where(or(...whereClause))
+    .orderBy(players.name);
+
+  return data;
 }
 export async function isPlayerConfigured(id: number): Promise<boolean> {
   const filteredPlayers = await db

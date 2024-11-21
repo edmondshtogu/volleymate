@@ -5,11 +5,12 @@ import {
   updateParticipantWithdrawal,
   isPlayerParticipatingEvent,
   isPlayerConfigured,
-  updateEvent
+  updateEvent,
+  searchPlayers
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { Event } from '@/lib/models';
+import { Event, SearchPlayerResult } from '@/lib/models';
 import { getUserContextFromCookies } from '@/lib/user-context';
 
 export async function editEvent(event: Event): Promise<void> {
@@ -43,4 +44,10 @@ export async function joinEvent(eventId: number, playerId: number) {
 export async function leaveEvent(eventId: number, playerId: number) {
   await updateParticipantWithdrawal(eventId, playerId, new Date());
   revalidatePath('/');
+}
+
+export async function getPossibleParticipants(
+  searchTerms: string[]
+): Promise<Array<SearchPlayerResult>> {
+  return await searchPlayers(searchTerms);
 }

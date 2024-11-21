@@ -12,6 +12,11 @@ export enum SkillScale {
   Skilled = 5
 }
 
+export interface SearchPlayerResult {
+  playerId: number;
+  name: string;
+}
+
 export interface Player {
   id: number;
   name: string;

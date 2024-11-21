@@ -16,6 +16,7 @@ import { Edit, X } from 'lucide-react';
 import { Participant } from '@/lib/models';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { getPossibleParticipants } from './actions';
 
 function distributePlayers(
   participants: Participant[],
@@ -93,18 +94,20 @@ export function ParticipantsList({
     setHasChanges(false);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (editMode === 'bulk') {
-      const newParticipants: Participant[] = bulkParticipants
+      const searchTerms = bulkParticipants
         .split('\n')
-        .map((name) => name.trim())
-        .filter((name) => name)
-        .map((name) => ({
-          playerId: Number(Math.random().toString(36).substr(2, 9)),
-          name,
-          skillsScore: 0,
-          withdrewAt: null
-        }));
+        .map((term) => {
+          let searchTerm = term.trim().replace(/^\d+\.\s*/, '').replace(' ', '');
+          searchTerm = searchTerm.trim();
+          return searchTerm;
+        })
+        .filter((term) => term);
+      const newParticipants = (await getPossibleParticipants(
+        searchTerms
+      )) as Participant[];
+      console.log('newParticipants', newParticipants);
       setTempParticipants(newParticipants);
       setHasChanges(true);
     }
