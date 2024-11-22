@@ -121,3 +121,24 @@ input[type='search']::-ms-clear {
 .players-list li {
   border-bottom: 1px solid rgb(217 217 217);
 }
+
+.pill {
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 10px;
+  padding: .5rem;
+}
+
+.edit-form .pill:hover {
+  background-color: #fff;
+}
+
+.pill button {
+  padding: .2rem;
+  height: fit-content;
+}
+
+.pill button:hover {
+  background-color: rgb(214, 64, 64);
+}

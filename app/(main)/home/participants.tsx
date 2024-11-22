@@ -171,7 +171,7 @@ export function ParticipantsList({
 
   function participantEditForm() {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 edit-form">
         {participants && participants.length > 0 && (
           <RadioGroup
             defaultValue={editMode}
@@ -202,7 +202,7 @@ export function ParticipantsList({
         ) : (
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
             {tempParticipants.map((participant) => (
-              <Badge key={participant.playerId} className="m-1">
+              <Badge key={participant.playerId} className="m-1 pill">
                 {participant.name}
                 <Button
                   size="sm"
