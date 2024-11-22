@@ -92,14 +92,9 @@ input[type='search']::-ms-clear {
 }
 
 
-ol {
+.team-box ol {
   list-style-type: decimal;
 }
-
-/* .squad-score span:first-child {
-  font-size: 2.25rem;
-  line-height: 2.25rem;
-} */
 
 .team-box {
   width: calc(100% - 1rem);
