@@ -21,11 +21,11 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
 
   const user = session!.user;
 
-  // Read the state from the request
+  // Read user context from the request
   let contextFromRequest = getUserContextFromRequest(req);
 
   if (contextFromRequest && contextFromRequest.playerId > 0) {
-    return res; // State already exists, proceed
+    return res; // User context already exists, proceed
   }
 
   // Generate new player_id and check admin roles
@@ -35,14 +35,14 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
   );
   const isAdmin = await userHasAdminRole(user['sub']);
 
-  // Create new state
+  // Create new user context
   contextFromRequest = {
     playerId,
     isConfigured,
     isAdmin
   };
 
-  // Save the state in cookies
+  // Save user context in cookies
   setUserContextInResponse(res, contextFromRequest);
   setUserContextInRequest(req, contextFromRequest);
 
