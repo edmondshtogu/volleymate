@@ -297,15 +297,13 @@ export function ParticipantsList({
                 <Card key={index} className={`team-box ${backgroundColors[index]}`}>
                   <CardHeader>
                     <CardTitle className='tracking-tight text-2xl font-bold'>Team {index + 1}</CardTitle>
-                    <CardDescription>
-                      <Badge variant="outline" className="capitalize squad-score">
-                          <span className='text-4xl font-bold'>
-                            {`${teamPercentage.toFixed(0)}`}
-                            <span className='text-xl font-semibold ml-1'>%</span>
-                          </span>
-                         <span className="text-sm text-gray-500 ml-2">Team Score</span>
-                      </Badge>
-                    </CardDescription>
+                    <Badge variant="outline" className="capitalize squad-score">
+                      <span className='text-4xl font-bold'>
+                        {`${teamPercentage.toFixed(0)}`}
+                        <span className='text-xl font-semibold ml-1'>%</span>
+                      </span>
+                      <span className="text-sm text-gray-500 ml-2">Team Score</span>
+                    </Badge>
                   </CardHeader>
                   <CardContent className='players-list'>
                     <ol>
