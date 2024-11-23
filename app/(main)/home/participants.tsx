@@ -263,7 +263,7 @@ export function ParticipantsList({
     );
   }
 
-  const maxTeamSize = 5;
+  const maxTeamSize = 6;
   const teamSizes = calculateTeamSizes(participants.length, maxTeamSize);
   const teams = distributePlayers(participants, teamSizes);
 
