@@ -3,27 +3,27 @@ import 'server-only';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import {
-  pgTable,
-  text,
+  boolean,
   integer,
-  smallint,
-  timestamp,
+  pgTable,
   serial,
-  boolean
+  smallint,
+  text,
+  timestamp
 } from 'drizzle-orm/pg-core';
 import {
+  and,
   count,
   desc,
   eq,
-  and,
   ilike,
-  or,
+  isNull,
   notInArray,
-  sql,
-  isNull
+  or,
+  sql
 } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { Player, Participant, Event, SearchPlayerResult } from './models';
+import { Event, Participant, Player, SearchPlayerResult } from './models';
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
@@ -103,7 +103,7 @@ export async function getPlayers(
     totalPlayers: totalPlayers[0].count
   };
 }
-export async function searchPlayers(
+export function searchPlayers(
   searchTerms: string[]
 ): Promise<Array<SearchPlayerResult>> {
   const whereClause = searchTerms.map((term) => {
@@ -120,7 +120,7 @@ export async function searchPlayers(
     }
   });
 
-  const data = await db
+  return db
     .select({
       playerId: players.id,
       name: players.name
@@ -128,8 +128,6 @@ export async function searchPlayers(
     .from(players)
     .where(or(...whereClause))
     .orderBy(players.name);
-
-  return data;
 }
 export async function isPlayerConfigured(id: number): Promise<boolean> {
   const filteredPlayers = await db
@@ -228,7 +226,7 @@ export async function updateParticipantWithdrawal(
         eq(participants.eventId, eventId),
         eq(participants.playerId, playerId)
       )
-  );
+    );
 }
 export async function isPlayerParticipatingEvent(
   eventId: number,
@@ -248,8 +246,10 @@ export async function isPlayerParticipatingEvent(
     .limit(1);
   return participant.length === 1;
 }
-export async function getEventParticipants(eventId: number): Promise<Array<Participant>> {
-  return await db
+export function getEventParticipants(
+  eventId: number
+): Promise<Array<Participant>> {
+  return db
     .select({
       playerId: players.id,
       name: players.name,
