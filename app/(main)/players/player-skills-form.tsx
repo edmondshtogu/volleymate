@@ -97,10 +97,12 @@ export function PlayerSkillsForm({
   const [formPlayer, setFormPlayer] = useState<Player>(player);
   const [isSaving, setIsSaving] = useState(false);
 
+  console.log('event', event);
+
   const isNotAllowedToSave = () => {
     // Check if the current date is less than 2 days before the event
     // If so, the user is not allowed to update the skills
-    const eventEndDate = new Date(event?.endTime);
+    const eventEndDate = new Date(event?.startTime);
     const currentDate = new Date();
     const twoDaysBeforeEvent = new Date(eventEndDate);
     twoDaysBeforeEvent.setDate(eventEndDate.getDate() - 2);

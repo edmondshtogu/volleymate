@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { editEvent } from './actions';
 
+import { parseISO, formatISO } from 'date-fns';
+
 export function EventDetails({
   event: initialEvent,
   userContext
@@ -24,10 +26,29 @@ export function EventDetails({
   event: Event | null;
   userContext: UserContext;
 }) {
-  const [event, setEvent] = useState<Event | null>(initialEvent);
+
+  const formatDateToISO = (date: Date) => {
+    return formatISO(new Date(date).toISOString());
+  };
+
+  /**
+   * Date format conversion for the edited event object. Workaround to avoid date format errors on change of date/time.
+   * without the need of a refactor of the onChange handlers/logic.
+   * @param initialEvent
+   * @returns {Event} - Edited event object with ISO formatted start and end times
+   */
+  const formatEditedEventDates = (initialEvent: any) => {
+    return {
+      ...initialEvent,
+      startTime: formatDateToISO(initialEvent.startTime),
+      endTime: formatDateToISO(initialEvent.endTime)
+    };
+  };
+
+  const [event, setEvent] = useState<Event | null>(formatEditedEventDates(initialEvent));
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [editedEvent, setEditedEvent] = useState<Event | null>(initialEvent);
+  const [editedEvent, setEditedEvent] = useState<Event | null>(formatEditedEventDates(initialEvent));
 
   if (!event) {
     return (
@@ -82,7 +103,24 @@ export function EventDetails({
     if (date && editedEvent) {
       setEditedEvent({
         ...editedEvent,
-        [field]: new Date(date).toUTCString()
+        [field]: formatDateToISO(date)
+      });
+    }
+  };
+
+  const handleTimeChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'startTime' | 'endTime'
+  ) => {
+    if (editedEvent) {
+      const [hours, minutes] = e.target.value.split(':');
+      const date = new Date(editedEvent[field]).toISOString();
+      const newDate = parseISO(date);
+      newDate.setHours(parseInt(hours), parseInt(minutes));
+
+      setEditedEvent({
+        ...editedEvent,
+        [field]: formatISO(newDate)
       });
     }
   };
@@ -169,14 +207,7 @@ export function EventDetails({
                         ? format(editedEvent.startTime, 'HH:mm')
                         : ''
                     }
-                    onChange={(e) => {
-                      const [hours, minutes] = e.target.value.split(':');
-                      const newDate = new Date(
-                        editedEvent?.startTime || new Date()
-                      );
-                      newDate.setHours(parseInt(hours), parseInt(minutes));
-                      handleDateChange(newDate, 'startTime');
-                    }}
+                    onChange={(e) => handleTimeChange(e, 'startTime')}
                   />
                 </div>
               </PopoverContent>
@@ -220,14 +251,7 @@ export function EventDetails({
                         ? format(editedEvent.endTime, 'HH:mm')
                         : ''
                     }
-                    onChange={(e) => {
-                      const [hours, minutes] = e.target.value.split(':');
-                      const newDate = new Date(
-                        editedEvent?.endTime || new Date()
-                      );
-                      newDate.setHours(parseInt(hours), parseInt(minutes));
-                      handleDateChange(newDate, 'endTime');
-                    }}
+                    onChange={(e) => handleTimeChange(e, 'endTime')}
                   />
                 </div>
               </PopoverContent>
