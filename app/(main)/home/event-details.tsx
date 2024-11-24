@@ -82,7 +82,7 @@ export function EventDetails({
     if (date && editedEvent) {
       setEditedEvent({
         ...editedEvent,
-        [field]: new Date(date.toUTCString())
+        [field]: new Date(date).toUTCString()
       });
     }
   };
