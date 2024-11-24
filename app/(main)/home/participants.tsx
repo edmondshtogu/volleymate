@@ -123,7 +123,7 @@ export function ParticipantsList({
       const newParticipants = (await searchPlayers(
         searchTerms
       )) as Participant[];
-      console.log('newParticipants', newParticipants);
+
       setTempParticipants(newParticipants);
       setShowBadges(true); // Show badges when data is fetched
       setHasChanges(true);

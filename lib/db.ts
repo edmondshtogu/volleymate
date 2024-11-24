@@ -115,7 +115,6 @@ export function searchPlayers(
       return eq(players.id, id);
     } else {
       // Otherwise, search by name
-      console.log(`%${term}%`);
       return ilike(players.name, `%${term}%`);
     }
   });

@@ -28,10 +28,12 @@ const ratingMap: Record<string, string> = {
 
 export function PlayerDetails({
   player,
-  userContext
+  userContext,
+  event
 }: {
   player: Player;
   userContext: UserContext;
+  event: any;
 }) {
   const pathname = usePathname();
   const [isEditing, setIsEditing] = useState(false);
@@ -97,6 +99,7 @@ export function PlayerDetails({
             player={currentPlayer}
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
+            event={event}
           />
         ) : (
           <>

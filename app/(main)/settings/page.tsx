@@ -1,4 +1,4 @@
-import { getPlayerById } from '@/lib/db';
+import { getPlayerById, getUpcomingEvent } from '@/lib/db';
 import { getUserContextFromCookies } from '@/lib/user-context';
 import {
   Card,
@@ -21,6 +21,8 @@ export default async function SettingsPage() {
     return <PageError error={Error('Player not found!')}></PageError>;
   }
 
+  const eventData = await getUpcomingEvent();
+
   return (
     <Card>
       <CardHeader>
@@ -28,7 +30,7 @@ export default async function SettingsPage() {
         <CardDescription>View all player settings.</CardDescription>
       </CardHeader>
       <CardContent>
-        <PlayerDetails player={player} userContext={userCtx} />
+        <PlayerDetails player={player} userContext={userCtx} event={eventData} />
       </CardContent>
     </Card>
   );

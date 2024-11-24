@@ -86,16 +86,35 @@ type SkillKey = keyof Omit<Player, 'id' | 'name' | 'configured'>;
 export function PlayerSkillsForm({
   player,
   onSave,
-  onCancel
+  onCancel, 
+  event
 }: {
   player: Player;
   onSave: (player: Player) => Promise<void>;
   onCancel: () => void;
+  event: any;
 }) {
   const [formPlayer, setFormPlayer] = useState<Player>(player);
   const [isSaving, setIsSaving] = useState(false);
 
+  const isNotAllowedToSave = () => {
+    // Check if the current date is less than 2 days before the event
+    // If so, the user is not allowed to update the skills
+    const eventEndDate = new Date(event?.endTime);
+    const currentDate = new Date();
+    const twoDaysBeforeEvent = new Date(eventEndDate);
+    twoDaysBeforeEvent.setDate(eventEndDate.getDate() - 2);
+
+    return currentDate > twoDaysBeforeEvent;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
+
+    if (isNotAllowedToSave()) {
+      alert('You are not allowed to update skills 2 days before the event');
+      return;
+    }
+
     e.preventDefault();
     setIsSaving(true);
     try {

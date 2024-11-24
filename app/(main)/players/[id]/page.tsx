@@ -1,4 +1,4 @@
-import { getPlayerById } from '@/lib/db';
+import { getPlayerById, getUpcomingEvent } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getUserContextFromCookies } from '@/lib/user-context';
 import PageError from './../../error';
@@ -16,13 +16,15 @@ export default async function PlayerPage({
     return <PageError error={Error('Player not found!')}></PageError>;
   }
 
+  const eventData = await getUpcomingEvent();
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Player Details</CardTitle>
       </CardHeader>
       <CardContent>
-        <PlayerDetails player={player} userContext={userCtx} />
+        <PlayerDetails player={player} userContext={userCtx} event={eventData} />
       </CardContent>
     </Card>
   );
