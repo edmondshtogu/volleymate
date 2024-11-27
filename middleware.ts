@@ -35,7 +35,7 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
   );
   const isAdmin = await userHasAdminRole(user['sub']);
 
-  // Create new user context
+  // Create new user context...
   contextFromRequest = {
     playerId,
     isConfigured,
