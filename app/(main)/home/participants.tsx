@@ -20,7 +20,8 @@ import {
   searchPlayers,
   joinEvent,
   leaveEvent,
-  getParticipants
+  getParticipants,
+  deleteParticipants
 } from './actions';
 
 function distributePlayers(
@@ -90,7 +91,15 @@ export function ParticipantsList({
     if (!participants || participants.length === 0) {
       setEditMode('bulk');
     }
-  }, [participants]);
+    const fetchParticipants = async () => {
+      const newParticipants = await getParticipants(eventId!);
+      console.log('eventId', eventId);
+      console.log('newParticipants', newParticipants);
+      setParticipants(newParticipants);
+    };
+
+    fetchParticipants();
+  }, []);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -132,13 +141,12 @@ export function ParticipantsList({
 
   const handleSave = async () => {
     setIsLoading(true); // Start loading
+    // clean up participants list in DB
+    await deleteParticipants();
+    // add new participants to event
     for (let i = 0; i < tempParticipants.length; i++) {
       const p = tempParticipants[i];
-      if (participants?.find((i) => i.playerId === p.playerId)) {
-        await leaveEvent(eventId!, p.playerId);
-      } else {
-        await joinEvent(eventId!, p.playerId, true);
-      }
+      await joinEvent(eventId!, p.playerId, true);
     }
 
     setParticipants(await getParticipants(eventId!));
