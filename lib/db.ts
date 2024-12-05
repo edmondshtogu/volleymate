@@ -357,3 +357,14 @@ export async function addEvent(
 
   return addedEvent[0].id;
 }
+
+export async function deleteParticipantsFromEvent() {
+  const currentEvent = await getUpcomingEvent();
+  if (!currentEvent) {
+    return;
+  }
+
+  await db
+    .delete(participants)
+    .where(eq(participants.eventId, currentEvent.id));
+}
