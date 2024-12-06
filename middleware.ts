@@ -25,7 +25,7 @@ export default withMiddlewareAuthRequired(async function middleware(req) {
   let contextFromRequest = getUserContextFromRequest(req);
 
   if (contextFromRequest && contextFromRequest.playerId > 0) {
-    return res; // User context already exists, proceed...
+    return res; // User context already exists, than proceed...
   }
 
   // Generate new player_id and check admin roles
