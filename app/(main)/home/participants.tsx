@@ -50,7 +50,9 @@ function distributePlayers(
 }
 
 function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5): number[] {
-  const numberOfTeams = Math.ceil(totalPlayers / maxTeamSize);
+  // we book a field once we have a min of 8 players
+  const numberOfFields = Math.ceil(totalPlayers / 8);
+  const numberOfTeams = numberOfFields * 2;
   const baseSize = Math.floor(totalPlayers / numberOfTeams);
   const remainder = totalPlayers % numberOfTeams;
 
