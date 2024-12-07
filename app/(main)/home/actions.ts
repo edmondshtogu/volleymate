@@ -7,7 +7,8 @@ import {
   isPlayerConfigured,
   updateEvent,
   searchPlayers as dbSearchPlayers,
-  getEventParticipants
+  getEventParticipants,
+  deleteParticipantsFromEvent
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -39,6 +40,7 @@ export async function joinEvent(
   }
 
   const existing = await isPlayerParticipatingEvent(eventId, playerId);
+  console.log('existing', existing);
   if (existing) {
     await updateParticipantWithdrawal(eventId, playerId, null);
   } else {
@@ -62,3 +64,7 @@ export async function searchPlayers(
 export async function getParticipants(eventId: number) {
   return await getEventParticipants(eventId);
 }
+
+export async function deleteParticipants() {
+  return await deleteParticipantsFromEvent();
+};
