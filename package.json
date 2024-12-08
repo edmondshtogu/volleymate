@@ -41,7 +41,7 @@
     "drizzle-orm": "^0.31.2",
     "drizzle-zod": "^0.5.1",
     "lucide-react": "^0.400.0",
-    "next": "15.0.0-rc.1",
+    "next": "15.0.4",
     "next-auth": "5.0.0-beta.19",
     "next-client-cookies": "^2.0.0",
     "nookies": "^2.5.2",
