@@ -30,21 +30,31 @@ function distributePlayers(
 ): Participant[][] {
   const teams: Participant[][] = teamSizes.map(() => []);
 
+  // Sort participants by skill score in descending order
   const sortedParticipants = [...participants].sort(
     (a, b) => b.skillsScore - a.skillsScore
   );
 
-  let direction = 1;
-  let teamIndex = 0;
-
-  for (const participant of sortedParticipants) {
-    teams[teamIndex].push(participant);
-
-    teamIndex += direction;
-    if (teamIndex === teams.length || teamIndex < 0) {
-      direction *= -1;
-      teamIndex += direction;
+  // Define a function to shuffle an array
+  function shuffle(array: Participant[]): Participant[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const randomIndex = Math.floor(Math.random() * (i + 1));
+      [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
     }
+    return array;
+  }
+
+  const numTeams = teams.length;
+  
+  // Divide and shuffle participants in chunks of size equal to the number of teams
+  for (let i = 0; i < sortedParticipants.length; i += numTeams) {
+    const chunk = sortedParticipants.slice(i, i + numTeams);
+    const shuffledChunk = shuffle(chunk);
+
+    // Distribute shuffled participants of the current chunk across teams
+    shuffledChunk.forEach((participant, index) => {
+      teams[index].push(participant);
+    });
   }
 
   return teams;
