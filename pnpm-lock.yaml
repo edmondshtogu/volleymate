@@ -79,8 +79,8 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1(drizzle-orm@0.31.4(@neondatabase/serverless@0.9.4)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(kysely@0.27.4)(react@19.0.0-rc-cd22717c-20241013)(types-react@19.0.0-rc.1))(zod@3.23.8)
       lucide-react:
-        specifier: ^0.400.0
-        version: 0.400.0(react@19.0.0-rc-cd22717c-20241013)
+        specifier: ^0.469.0
+        version: 0.469.0(react@19.0.0-rc-cd22717c-20241013)
       next:
         specifier: 15.0.0-rc.1
         version: 15.0.0-rc.1(react-dom@19.0.0-rc-cd22717c-20241013(react@19.0.0-rc-cd22717c-20241013))(react@19.0.0-rc-cd22717c-20241013)
@@ -194,9 +194,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
+    deprecated: 'Merged into tsx: https://tsx.is'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
+    deprecated: 'Merged into tsx: https://tsx.is'
 
   '@esbuild/aix-ppc64@0.19.12':
     resolution: {integrity: sha512-bmoCYyWdEL3wDQIVbcyzRyeKLgk2WtWLTWz1ZIAZF/EGbNOwSA6ew3PftJ1PqMiOOGu0OyFMzG53L0zqIpPeNA==}
@@ -1757,8 +1759,8 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
-  lucide-react@0.400.0:
-    resolution: {integrity: sha512-rpp7pFHh3Xd93KHixNgB0SqThMHpYNzsGUu69UaQbSZ75Q/J3m5t6EhKyMT3m4w2WOxmJ2mY0tD3vebnXqQryQ==}
+  lucide-react@0.469.0:
+    resolution: {integrity: sha512-28vvUnnKQ/dBwiCQtwJw7QauYnE7yd2Cyp4tTTJpvglX4EMpbflcdBgrgToX2j71B3YvugK/NH3BGUk+E/p/Fw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -3706,7 +3708,7 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
-  lucide-react@0.400.0(react@19.0.0-rc-cd22717c-20241013):
+  lucide-react@0.469.0(react@19.0.0-rc-cd22717c-20241013):
     dependencies:
       react: 19.0.0-rc-cd22717c-20241013
 
