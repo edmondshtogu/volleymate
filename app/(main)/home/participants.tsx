@@ -212,6 +212,7 @@ export function ParticipantsList({
               }}
               rows={5}
             />
+            <Label htmlFor="fieldsNumber" className='mt-4 block'>Number of fields</Label>
             <Input
               placeholder="Enter number of fields"
               type='number'
