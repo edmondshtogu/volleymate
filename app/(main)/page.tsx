@@ -9,7 +9,7 @@ import PageError from './error';
 export default async function Page() {
   let userContext = await getUserContextFromCookies();
 
-  if (!userContext?.playerId || !userContext?.isConfigured) {
+  if (!userContext?.playerId) {
     return <PageError error={Error('Player not found!')} />;
   }
 
