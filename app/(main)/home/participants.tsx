@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Loader2, X, Save, Star } from 'lucide-react';
 import { Participant, UserContext } from '@/lib/models';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   searchPlayers,
@@ -50,9 +51,9 @@ function distributePlayers(
   return teams;
 }
 
-function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5): number[] {
-  // we book a field once we have a min of 8 players
-  const numberOfFields = Math.ceil(totalPlayers / 8);
+function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5, fieldsNumber: null | number): number[] {
+  // Calculate the number of fields needed based on max team size if fieldsNumber is not provided
+  const numberOfFields = fieldsNumber || Math.ceil(totalPlayers / (maxTeamSize * 2));
   const numberOfTeams = numberOfFields * 2;
   const baseSize = Math.floor(totalPlayers / numberOfTeams);
   const remainder = totalPlayers % numberOfTeams;
@@ -82,6 +83,7 @@ export function ParticipantsList({
   );
   const [isEditing, setIsEditing] = useState(false);
   const [bulkParticipants, setBulkParticipants] = useState('');
+  const [fieldsNumber, setFieldsNumber] = useState<number | null>(null);
   const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk');
   const [error, setError] = useState<string | null>(null);
   const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
@@ -200,15 +202,26 @@ export function ParticipantsList({
           </RadioGroup>
         )}
         {editMode === 'bulk' && !showBadges ? (
-          <Textarea
-            placeholder="Enter participant names, one per line"
-            value={bulkParticipants}
-            onChange={(e) => {
-              setBulkParticipants(e.target.value);
-              setHasChanges(e.target.value.trim() !== '');
-            }}
-            rows={5}
-          />
+          <>
+            <Textarea
+              placeholder="Enter participant names, one per line"
+              value={bulkParticipants}
+              onChange={(e) => {
+                setBulkParticipants(e.target.value);
+                setHasChanges(e.target.value.trim() !== '');
+              }}
+              rows={5}
+            />
+            <Input
+              placeholder="Enter number of fields"
+              type='number'
+              value={fieldsNumber || 1}
+              onChange={(e) => {
+                setFieldsNumber(Number(e.target.value));
+              }}
+            ></Input>
+          </>
+
         ) : (
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
             {tempParticipants.map((participant) => (
@@ -274,7 +287,7 @@ export function ParticipantsList({
   }
 
   const maxTeamSize = 6;
-  const teamSizes = calculateTeamSizes(participants.length, maxTeamSize);
+  const teamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
   const teams = distributePlayers(participants, teamSizes);
 
   return (
