@@ -54,7 +54,9 @@ function distributePlayers(
 
     // Distribute shuffled participants of the current chunk across teams
     shuffledChunk.forEach((participant, index) => {
-      teams[index].push(participant);
+      if (teams[index]) {
+        teams[index].push(participant);
+      }
     });
   }
 
@@ -101,19 +103,66 @@ export function ParticipantsList({
   const [showBadges, setShowBadges] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // New state to store the distributed teams
+  const [teams, setTeams] = useState<Participant[][]>([]);
+
+  // Function to generate a unique key for localStorage based on eventId and fieldsNumber
+  const generateLocalStorageKey = () => {
+    return `teams_${eventId}_${fieldsNumber}`;
+  };
+
   useEffect(() => {
     if (!participants || participants.length === 0) {
       setEditMode('bulk');
     }
     const fetchParticipants = async () => {
-      const newParticipants = await getParticipants(eventId!);
-      console.log('eventId', eventId);
-      console.log('newParticipants', newParticipants);
-      setParticipants(newParticipants);
+      if (eventId !== undefined) {
+        const newParticipants = await getParticipants(eventId);
+        console.log('eventId', eventId);
+        console.log('newParticipants', newParticipants);
+        setParticipants(newParticipants);
+      }
     };
 
     fetchParticipants();
-  }, []);
+  }, [eventId]);
+
+  // useEffect to distribute teams only when participants or fieldsNumber change
+  useEffect(() => {
+    if (participants && participants.length > 0 && eventId !== undefined) {
+      const localStorageKey = generateLocalStorageKey();
+      const savedTeams = localStorage.getItem(localStorageKey);
+
+      if (savedTeams) {
+        try {
+          const parsedTeams: Participant[][] = JSON.parse(savedTeams);
+          setTeams(parsedTeams);
+          console.log('Loaded teams from localStorage');
+        } catch (error) {
+          console.error('Error parsing teams from localStorage:', error);
+          // If parsing fails, distribute teams anew
+          const maxTeamSize = 6; // Define maxTeamSize here or move it outside if needed
+          const calculatedTeamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
+          const distributedTeams = distributePlayers(participants, calculatedTeamSizes);
+          setTeams(distributedTeams);
+          // Save the newly distributed teams to localStorage
+          localStorage.setItem(localStorageKey, JSON.stringify(distributedTeams));
+          console.log('Distributed new teams and saved to localStorage');
+        }
+      } else {
+        // If no saved teams, distribute and save
+        const maxTeamSize = 6; // Define maxTeamSize here or move it outside if needed
+        const calculatedTeamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
+        const distributedTeams = distributePlayers(participants, calculatedTeamSizes);
+        setTeams(distributedTeams);
+        // Save to localStorage
+        localStorage.setItem(localStorageKey, JSON.stringify(distributedTeams));
+        console.log('Distributed new teams and saved to localStorage');
+      }
+    } else {
+      setTeams([]);
+    }
+  }, [participants, fieldsNumber, eventId]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -155,21 +204,30 @@ export function ParticipantsList({
 
   const handleSave = async () => {
     setIsLoading(true); // Start loading
-    // clean up participants list in DB
-    await deleteParticipants();
-    // add new participants to event
-    for (let i = 0; i < tempParticipants.length; i++) {
-      const p = tempParticipants[i];
-      await joinEvent(eventId!, p.playerId, true);
-    }
+    try {
+      // Clean up participants list in DB
+      await deleteParticipants();
+      // Add new participants to event
+      for (let i = 0; i < tempParticipants.length; i++) {
+        const p = tempParticipants[i];
+        await joinEvent(eventId!, p.playerId, true);
+      }
 
-    setParticipants(await getParticipants(eventId!));
-    setIsEditing(false);
-    setBulkParticipants('');
-    setError(null);
-    setHasChanges(false);
-    setShowBadges(false);
-    setIsLoading(false); // Stop loading
+      const updatedParticipants = await getParticipants(eventId!);
+      setParticipants(updatedParticipants);
+      setIsEditing(false);
+      setBulkParticipants('');
+      setError(null);
+      setHasChanges(false);
+      setShowBadges(false);
+
+      // After updating participants, the useEffect will handle distributing teams and saving to localStorage
+    } catch (err) {
+      console.error('Error saving participants:', err);
+      setError('An error occurred while saving participants.');
+    } finally {
+      setIsLoading(false); // Stop loading
+    }
   };
 
   const removeParticipant = (playerId: number) => {
@@ -229,6 +287,7 @@ export function ParticipantsList({
               value={fieldsNumber || 1}
               onChange={(e) => {
                 setFieldsNumber(Number(e.target.value));
+                setHasChanges(true); // Since fieldsNumber affects team distribution
               }}
             ></Input>
           </>
@@ -297,10 +356,6 @@ export function ParticipantsList({
     );
   }
 
-  const maxTeamSize = 6;
-  const teamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
-  const teams = distributePlayers(participants, teamSizes);
-
   return (
     <Card>
       <CardHeader>{participantTitle()}</CardHeader>
@@ -328,7 +383,7 @@ export function ParticipantsList({
                 'bg-gray-50/30',
               ];
               return (
-                <Card key={index} className={`team-box ${backgroundColors[index]}`}>
+                <Card key={index} className={`team-box ${backgroundColors[index % backgroundColors.length]}`}>
                   <CardHeader>
                     <CardTitle className='tracking-tight text-2xl font-bold'>Team {index + 1}</CardTitle>
                     <Badge variant="outline" className="capitalize squad-score">
