@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-// Import your async actions:
+// Your async actions
 import {
   searchPlayers,
   joinEvent,
@@ -28,7 +28,7 @@ import {
 } from './actions';
 
 /* ------------------------------------------------------------------
-   1) Utility functions: distributePlayers, calculateTeamSizes
+   1) Utility Functions: distributePlayers, calculateTeamSizes
    ------------------------------------------------------------------ */
 function distributePlayers(
   participants: Participant[],
@@ -51,29 +51,25 @@ function distributePlayers(
   }
 
   const numTeams = teams.length;
-
-  // Divide and shuffle participants in chunks of size = number of teams
+  // Divide and shuffle in chunks of size = number of teams
   for (let i = 0; i < sortedParticipants.length; i += numTeams) {
     const chunk = sortedParticipants.slice(i, i + numTeams);
     const shuffledChunk = shuffle(chunk);
-
-    // Distribute shuffled participants of the current chunk
     shuffledChunk.forEach((participant, index) => {
       if (teams[index]) {
         teams[index].push(participant);
       }
     });
   }
-
   return teams;
 }
 
 function calculateTeamSizes(
   totalPlayers: number,
-  maxTeamSize = 6, // you can adjust
+  maxTeamSize: number,
   fieldsNumber: number | null
 ): number[] {
-  // If fieldsNumber not provided, approximate # of fields
+  // If fieldsNumber is not set, approximate
   const numberOfFields =
     fieldsNumber && fieldsNumber > 0
       ? fieldsNumber
@@ -87,7 +83,6 @@ function calculateTeamSizes(
   for (let i = 0; i < remainder; i++) {
     teamSizes[i]++;
   }
-
   return teamSizes;
 }
 
@@ -96,7 +91,7 @@ function calculateTeamSizes(
    ------------------------------------------------------------------ */
 export type ParticipantsParam = {
   eventId: number | undefined;
-  participants: Participant[] | null;
+  participants: Participant[] | null; // initial participants from SSR or elsewhere
   userContext: UserContext;
 };
 
@@ -108,7 +103,6 @@ export function ParticipantsList({
   /* ----------------------------------------------------------------
      2a) State Variables
      ----------------------------------------------------------------*/
-  // Participants
   const [participants, setParticipants] = useState<Participant[] | null>(
     initialParticipants
   );
@@ -117,25 +111,23 @@ export function ParticipantsList({
   const [isEditing, setIsEditing] = useState(false);
   const [bulkParticipants, setBulkParticipants] = useState('');
   const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk');
-
-  // We track changes, loading, errors
-  const [hasChanges, setHasChanges] = useState(false);
+  const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
   const [showBadges, setShowBadges] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Loading & Error states
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // We store the "would-be" participants when editing
-  const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
 
   // TEAMS distribution
   const [teams, setTeams] = useState<Participant[][]>([]);
 
-  // 2b) fieldsNumber: we want to persist this to localStorage too
+  // 2b) fieldsNumber => also store in localStorage
   const [fieldsNumber, setFieldsNumber] = useState<number>(() => {
-    // Lazy initialization from localStorage, defaulting to 1 if none
-    if (typeof window !== 'undefined' && eventId !== undefined) {
-      const savedFields = localStorage.getItem(`fieldsNumber_${eventId}`);
-      return savedFields ? Number(savedFields) : 1;
+    if (typeof window !== 'undefined') {
+      // read from localStorage if it exists
+      const saved = localStorage.getItem(`fieldsNumber_${eventId}`);
+      return saved ? Number(saved) : 1;
     }
     return 1;
   });
@@ -143,120 +135,128 @@ export function ParticipantsList({
   /* ----------------------------------------------------------------
      3) localStorage Keys
      ----------------------------------------------------------------*/
-  const generateParticipantsKey = () => `participants_${eventId}`;
-  const generateTeamsKey = (fields: number) => `teams_${eventId}_${fields}`;
-  const generateFieldsKey = () => `fieldsNumber_${eventId}`;
+  const participantsKey = `participants_${eventId}`;
+  const fieldsKey = `fieldsNumber_${eventId}`;
+  function getTeamsKey(fields = fieldsNumber) {
+    return `teams_${eventId}_${fields}`;
+  }
 
   /* ----------------------------------------------------------------
-     4) Data Loading & Saving Logic
+     4) Data Loading: 
+        4a) Load from localStorage 
+        4b) In background, fetch from backend 
+        4c) Compare sets; if different => update local & state
      ----------------------------------------------------------------*/
-  // 4a) Load participants from localStorage or fetch from backend
-  useEffect(() => {
-    async function loadParticipants() {
-      if (!eventId) return;
-
-      const participantsKey = generateParticipantsKey();
-      const savedParticipants = localStorage.getItem(participantsKey);
-
-      if (savedParticipants) {
-        try {
-          const parsed = JSON.parse(savedParticipants) as Participant[];
-          setParticipants(parsed);
-        } catch (err) {
-          console.error('Error parsing participants from localStorage:', err);
-          // fallback: fetch from backend
-          await fetchParticipants();
-        }
-      } else {
-        // no local participants => fetch from backend
-        await fetchParticipants();
-      }
-    }
-
-    async function fetchParticipants() {
-      if (!eventId) return;
-      try {
-        const backParticipants = await getParticipants(eventId);
-        setParticipants(backParticipants);
-        const participantsKey = generateParticipantsKey();
-        localStorage.setItem(participantsKey, JSON.stringify(backParticipants));
-      } catch (err) {
-        console.error('Error fetching participants from backend:', err);
-        setError('Failed to fetch participants.');
-      }
-    }
-
-    loadParticipants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
-
-  // 4b) Load fieldsNumber from localStorage (again, if needed) on mount
   useEffect(() => {
     if (!eventId) return;
-    const savedFields = localStorage.getItem(generateFieldsKey());
-    if (savedFields) {
-      const parsed = Number(savedFields);
-      if (!isNaN(parsed)) {
-        setFieldsNumber(parsed);
+
+    // 4a) Load participants from localStorage if available
+    let localPart: Participant[] | null = null;
+    const savedParticipants = localStorage.getItem(participantsKey);
+    if (savedParticipants) {
+      try {
+        const parsed = JSON.parse(savedParticipants) as Participant[];
+        localPart = parsed;
+        // If we had no participants from SSR, set them
+        if (!participants) {
+          setParticipants(parsed);
+        }
+      } catch (err) {
+        console.error('Error parsing local participants:', err);
       }
     }
-  }, [eventId]);
 
-  // 4c) On participants or fieldsNumber change => load or distribute teams
+    // 4b) In background, fetch from backend
+    (async () => {
+      try {
+        const backendParticipants = await getParticipants(eventId);
+        // Compare to localPart or existing `participants` in state
+        // (prefer the up-to-date `participants` in state if it exists)
+        const current = participants ?? localPart ?? [];
+        // If there's no difference in IDs, do nothing
+        const currentIds = current.map((p) => p.playerId).sort((a, b) => a - b);
+        const backendIds = backendParticipants.map((p) => p.playerId).sort((a, b) => a - b);
+
+        const isSame =
+          currentIds.length === backendIds.length &&
+          currentIds.every((id, idx) => id === backendIds[idx]);
+
+        if (!isSame) {
+          // The backend has new or fewer participants => update everything
+          setParticipants(backendParticipants);
+          localStorage.setItem(participantsKey, JSON.stringify(backendParticipants));
+        }
+      } catch (fetchErr) {
+        console.error('Error fetching participants from backend:', fetchErr);
+        setError('Failed to fetch participants from server.');
+      }
+    })();
+  }, [eventId, participantsKey, participants]);
+
+  // 4c) Load fieldsNumber from localStorage (again) if needed
   useEffect(() => {
-    if (!participants || participants.length === 0 || !eventId) {
+    if (!eventId) return;
+    const savedFields = localStorage.getItem(fieldsKey);
+    if (savedFields) {
+      const parsedVal = Number(savedFields);
+      if (!isNaN(parsedVal)) {
+        setFieldsNumber(parsedVal);
+      }
+    }
+  }, [eventId, fieldsKey]);
+
+  /* ----------------------------------------------------------------
+     5) Distribute or Load Teams whenever participants or fieldsNumber change
+     ----------------------------------------------------------------*/
+  useEffect(() => {
+    if (!eventId || !participants || participants.length === 0) {
       setTeams([]);
       return;
     }
 
-    const participantsKey = generateParticipantsKey();
-    const teamsKey = generateTeamsKey(fieldsNumber);
-
-    // Attempt to load teams from localStorage
+    const teamsKey = getTeamsKey(fieldsNumber);
     const savedTeams = localStorage.getItem(teamsKey);
     if (savedTeams) {
       try {
         const parsedTeams: Participant[][] = JSON.parse(savedTeams);
-        // Compare the IDs
-        const savedIds = parsedTeams
-          .flat()
-          .map((p) => p.playerId)
-          .sort((a, b) => a - b);
-        const currentIds = participants
-          .map((p) => p.playerId)
-          .sort((a, b) => a - b);
+        // Compare if parsedTeams includes exactly the same participant IDs
+        const savedIds = parsedTeams.flat().map((p) => p.playerId).sort((a, b) => a - b);
+        const currentIds = participants.map((p) => p.playerId).sort((a, b) => a - b);
 
-        const isSameParticipants =
+        const isSame =
           savedIds.length === currentIds.length &&
           savedIds.every((id, idx) => id === currentIds[idx]);
 
-        if (isSameParticipants) {
-          // they match => just load them
+        if (isSame) {
+          // load from localStorage => no re-distribution
           setTeams(parsedTeams);
           return;
         }
-        // else => mismatch => redistribute
       } catch (err) {
-        console.error('Error parsing teams from localStorage:', err);
+        console.error('Error parsing local teams:', err);
       }
     }
 
-    // no savedTeams or mismatch => re-distribute
+    // Mismatch or no savedTeams => distribute anew
     const maxTeamSize = 6;
     const teamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
-    const freshTeams = distributePlayers(participants, teamSizes);
-    setTeams(freshTeams);
-    localStorage.setItem(teamsKey, JSON.stringify(freshTeams));
-  }, [participants, fieldsNumber, eventId]);
+    const newTeams = distributePlayers(participants, teamSizes);
+    setTeams(newTeams);
+    localStorage.setItem(teamsKey, JSON.stringify(newTeams));
+  }, [eventId, participants, fieldsNumber]);
 
   /* ----------------------------------------------------------------
-     5) Handlers: Editing, Saving, etc.
+     6) Handlers: Editing, Saving, etc.
      ----------------------------------------------------------------*/
+  // Edit
   const handleEdit = () => {
     setIsEditing(true);
-    setTempParticipants(participants || []);
+    if (participants) {
+      setTempParticipants(participants);
+    }
   };
 
+  // Cancel
   const handleCancel = () => {
     setIsEditing(false);
     setBulkParticipants('');
@@ -266,71 +266,61 @@ export function ParticipantsList({
     setShowBadges(false);
   };
 
-  // 5a) Next => for bulk searching players
+  // Bulk => Next
   const handleNext = async () => {
-    if (editMode === 'bulk') {
-      const searchTerms = bulkParticipants
-        .split('\n')
-        .map((term) =>
-          term
-            .trim()
-            .replace(/[\u00A0\u200C\u200B\u202F\u2060\u2064]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .replace(/^\d+\.\s*/, '')
-            .toLowerCase()
-            .trim()
-        )
-        .filter((term) => term);
+    if (editMode !== 'bulk') return;
+    const lines = bulkParticipants
+      .split('\n')
+      .map((l) =>
+        l
+          .trim()
+          .replace(/[\u00A0\u200C\u200B\u202F\u2060\u2064]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .replace(/^\d+\.\s*/, '')
+          .toLowerCase()
+      )
+      .filter(Boolean);
 
-      try {
-        const newParticipants = (await searchPlayers(searchTerms)) as Participant[];
-        setTempParticipants(newParticipants);
-        setShowBadges(true);
-        setHasChanges(true);
-      } catch (err) {
-        console.error('Error searching players:', err);
-        setError('Failed to search players.');
-      }
+    try {
+      const found = (await searchPlayers(lines)) as Participant[];
+      setTempParticipants(found);
+      setShowBadges(true);
+      setHasChanges(true);
+    } catch (err) {
+      console.error('Error searching players:', err);
+      setError('Failed to search players.');
     }
   };
 
-  // 5b) Save => updates participants in DB, localStorage, redistributes teams
+  // Save => updates DB, localStorage, triggers new distribution
   const handleSave = async () => {
     if (!eventId) return;
     setIsLoading(true);
-
     try {
-      // Clean up participants in DB:
+      // 1) Clean up participants in DB
       await deleteParticipants();
-
-      // Add new participants to event
+      // 2) Add new participants
       for (const p of tempParticipants) {
         await joinEvent(eventId, p.playerId, true);
       }
+      // 3) Fetch updated from backend
+      const updated = await getParticipants(eventId);
+      setParticipants(updated);
+      localStorage.setItem(participantsKey, JSON.stringify(updated));
 
-      // Fetch the updated list
-      const updatedParticipants = await getParticipants(eventId);
-      setParticipants(updatedParticipants);
-
-      // Store them in localStorage
-      localStorage.setItem(generateParticipantsKey(), JSON.stringify(updatedParticipants));
-
-      // Re-distribute teams based on updated participants
+      // 4) Re-distribute teams for updated participants
       const maxTeamSize = 6;
-      const teamSizes = calculateTeamSizes(updatedParticipants.length, maxTeamSize, fieldsNumber);
-      const newTeams = distributePlayers(updatedParticipants, teamSizes);
+      const sizes = calculateTeamSizes(updated.length, maxTeamSize, fieldsNumber);
+      const newTeams = distributePlayers(updated, sizes);
       setTeams(newTeams);
+      localStorage.setItem(getTeamsKey(fieldsNumber), JSON.stringify(newTeams));
 
-      localStorage.setItem(generateTeamsKey(fieldsNumber), JSON.stringify(newTeams));
-
-      // Reset editing states
+      // 5) Reset editing states
       setIsEditing(false);
       setBulkParticipants('');
       setError(null);
       setHasChanges(false);
       setShowBadges(false);
-
-      console.log('Saved participants and redistributed teams.');
     } catch (err) {
       console.error('Error saving participants:', err);
       setError('An error occurred while saving participants.');
@@ -339,23 +329,23 @@ export function ParticipantsList({
     }
   };
 
-  // 5c) Remove participant from the temp list (while editing)
-  const removeParticipant = (playerId: number) => {
-    setTempParticipants((prev) => prev.filter((p) => p.playerId !== playerId));
+  // Remove participant from temp
+  const removeParticipant = (pid: number) => {
+    setTempParticipants((prev) => prev.filter((p) => p.playerId !== pid));
     setHasChanges(true);
   };
 
-  // 5d) Handle fieldsNumber changes => persist to localStorage
+  // Changing fieldsNumber => persist
   const handleFieldsNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value);
-    const finalVal = isNaN(val) || val <= 0 ? 1 : val; // fallback to 1
+    const finalVal = isNaN(val) || val <= 0 ? 1 : val;
     setFieldsNumber(finalVal);
-    localStorage.setItem(generateFieldsKey(), String(finalVal));
-    setHasChanges(true); // because changing field number affects distribution
+    localStorage.setItem(fieldsKey, String(finalVal));
+    setHasChanges(true);
   };
 
   /* ----------------------------------------------------------------
-     6) UI Rendering
+     7) UI Rendering
      ----------------------------------------------------------------*/
   function participantTitle() {
     return (
@@ -406,7 +396,6 @@ export function ParticipantsList({
             </Label>
             <Input
               id="fieldsNumber"
-              placeholder="Enter number of fields"
               type="number"
               value={fieldsNumber}
               onChange={handleFieldsNumberChange}
@@ -414,10 +403,10 @@ export function ParticipantsList({
           </>
         ) : (
           <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-            {tempParticipants.map((participant) => (
-              <Badge key={participant.playerId} className="m-1 pill">
-                {participant.name}
-                <Button size="sm" onClick={() => removeParticipant(participant.playerId)} className="ml-2">
+            {tempParticipants.map((p) => (
+              <Badge key={p.playerId} className="m-1 pill">
+                {p.name}
+                <Button size="sm" onClick={() => removeParticipant(p.playerId)} className="ml-2">
                   <X className="h-3 w-3" />
                 </Button>
               </Badge>
@@ -426,7 +415,6 @@ export function ParticipantsList({
         )}
 
         <div className="flex space-x-2">
-          {/* "Next" button for bulk => "Save" button otherwise */}
           {editMode === 'bulk' && !showBadges && bulkParticipants.trim() !== '' ? (
             <Button size="sm" onClick={handleNext}>
               Next
@@ -457,7 +445,7 @@ export function ParticipantsList({
   }
 
   /* ----------------------------------------------------------------
-     7) Final Render
+     8) Final Render
      ----------------------------------------------------------------*/
   if (!participants || participants.length === 0) {
     return (
@@ -495,15 +483,14 @@ export function ParticipantsList({
                 'bg-pink-50/30',
                 'bg-gray-50/30'
               ];
+
               return (
                 <Card key={index} className={`team-box ${backgroundColors[index % backgroundColors.length]}`}>
                   <CardHeader>
-                    <CardTitle className="tracking-tight text-2xl font-bold">
-                      Team {index + 1}
-                    </CardTitle>
+                    <CardTitle className="tracking-tight text-2xl font-bold">Team {index + 1}</CardTitle>
                     <Badge variant="outline" className="capitalize squad-score">
                       <span className="text-4xl font-bold">
-                        {`${teamPercentage.toFixed(0)}`}
+                        {teamPercentage.toFixed(0)}
                         <span className="text-xl font-semibold ml-1">%</span>
                       </span>
                       <span className="text-sm text-gray-500 ml-2">Team Score</span>
@@ -517,9 +504,7 @@ export function ParticipantsList({
                           className="flex items-center justify-between py-1 border-b border-gray-100 last:border-b-0"
                         >
                           <span className="font-medium">
-                            <span className="inline-block w-6 text-gray-500">
-                              {i + 1}.
-                            </span>
+                            <span className="inline-block w-6 text-gray-500">{i + 1}.</span>
                             {participant.name}
                           </span>
                           <div className="flex items-center">
