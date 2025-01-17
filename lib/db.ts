@@ -279,7 +279,8 @@ export const events = pgTable('volley_events', {
     mode: 'string',
     precision: 3
   }).notNull(),
-  endTime: timestamp('end_time', { mode: 'string', precision: 3 }).notNull()
+  endTime: timestamp('end_time', { mode: 'string', precision: 3 }).notNull(),
+  fieldsNumber: smallint('fields_number')
 });
 const insertEventSchema = createInsertSchema(events);
 export async function getUpcomingEvent(): Promise<Event | null> {
@@ -289,7 +290,8 @@ export async function getUpcomingEvent(): Promise<Event | null> {
       name: events.name,
       location: events.location,
       startTime: events.startTime,
-      endTime: events.endTime
+      endTime: events.endTime,
+      fieldsNumber: events.fieldsNumber ?? 0
     })
     .from(events)
     .orderBy(desc(events.startTime))
@@ -297,7 +299,10 @@ export async function getUpcomingEvent(): Promise<Event | null> {
   if (filteredEvents.length < 1) {
     return null;
   }
-  const event = filteredEvents[0];
+  const event = {
+    ...filteredEvents[0],
+    fieldsNumber: filteredEvents[0].fieldsNumber ?? 0
+  };
 
   const eventParticipants = await getEventParticipants(event.id);
 
@@ -315,10 +320,21 @@ export async function updateEvent(event: Event): Promise<void> {
       name: event.name,
       location: event.location,
       startTime: event.startTime.toString(),
-      endTime: event.endTime.toString()
+      endTime: event.endTime.toString(),
     })
     .where(eq(events.id, event.id));
 }
+
+// update fieldsNumber in events table
+export async function updateFieldsNumberFromEvent(eventId: number, fieldsNumber: number | null) {
+  await db
+    .update(events)
+    .set({
+      fieldsNumber: fieldsNumber
+    })
+    .where(eq(events.id, eventId));
+}
+
 export async function retainTop2Events() {
   const topEvents = await db
     .select()

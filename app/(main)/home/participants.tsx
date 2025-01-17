@@ -22,7 +22,8 @@ import {
   joinEvent,
   leaveEvent,
   getParticipants,
-  deleteParticipants
+  deleteParticipants,
+  updateFieldsNumber,
 } from './actions';
 
 function distributePlayers(
@@ -69,40 +70,23 @@ function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5, fieldsNumber:
 
 export type ParticipantsParam = {
   eventId: number | undefined;
-  eventEndTime: Date | undefined;
+  fields_number: number | undefined;
   participants: Participant[] | null;
   userContext: UserContext;
 };
 
 export function ParticipantsList({
   eventId,
-  eventEndTime,
+  fields_number,
   participants: initialParticipants,
   userContext
 }: ParticipantsParam) {
-  const getFieldsNumber = () => {
-    // get fields number from local storage
-    const fieldsNumber = localStorage.getItem('fieldsNumber');
-    const expiryTime = localStorage.getItem('fieldsNrExpiry');
-
-    if (fieldsNumber && expiryTime) {
-      if (new Date().getTime() < parseInt(expiryTime)) {
-        return parseInt(fieldsNumber);
-      } else {
-        localStorage.removeItem('fieldsNumber');
-        localStorage.removeItem('fieldsNrExpiry');
-        return null;
-      }
-    }
-    return null;
-  };
-
   const [participants, setParticipants] = useState<Participant[] | null>(
     initialParticipants
   );
   const [isEditing, setIsEditing] = useState(false);
   const [bulkParticipants, setBulkParticipants] = useState('');
-  const [fieldsNumber, setFieldsNumber] = useState<number | null>(1);
+  const [fieldsNumber, setFieldsNumber] = useState<number | null>(fields_number ?? null);
   const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk');
   const [error, setError] = useState<string | null>(null);
   const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
@@ -114,9 +98,6 @@ export function ParticipantsList({
     if (!participants || participants.length === 0) {
       setEditMode('bulk');
     }
-
-    // update fields number with local storage value
-    if (getFieldsNumber()) setFieldsNumber(getFieldsNumber());
 
     const fetchParticipants = async () => {
       const newParticipants = await getParticipants(eventId!);
@@ -176,7 +157,9 @@ export function ParticipantsList({
       await joinEvent(eventId!, p.playerId, true);
     }
 
-    saveFieldsNumber();
+    // save fields number
+    await updateFieldsNumber(eventId!, fieldsNumber);
+    setFieldsNumber(fieldsNumber);
 
     setParticipants(await getParticipants(eventId!));
     setIsEditing(false);
@@ -190,17 +173,6 @@ export function ParticipantsList({
   const removeParticipant = (playerId: number) => {
     setTempParticipants((prev) => prev.filter((p) => p.playerId !== playerId));
     setHasChanges(true);
-  };
-
-  const saveFieldsNumber = async () => {
-    // save fields number in local storage when bulk edit is selected and fields number is provided
-    if (editMode === 'bulk' && fieldsNumber) {
-      localStorage.setItem('fieldsNumber', fieldsNumber.toString());
-      // set expiry time for local storage to event end time
-      if (eventEndTime) {
-        localStorage.setItem('fieldsNrExpiry', eventEndTime.getTime().toString());
-      }
-    }
   };
 
   function participantTitle() {
@@ -252,7 +224,7 @@ export function ParticipantsList({
             <Input
               placeholder="Enter number of fields"
               type='number'
-              value={fieldsNumber || ''}
+              value={fieldsNumber || 1}
               onChange={(e) => {
                 setFieldsNumber(Number(e.target.value));
               }}

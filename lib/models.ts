@@ -42,5 +42,6 @@ export interface Event {
   location: string;
   startTime: Date;
   endTime: Date;
+  fieldsNumber: number;
   participants: Participant[];
 }
