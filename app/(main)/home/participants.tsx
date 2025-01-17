@@ -24,6 +24,7 @@ import {
   getParticipants,
   deleteParticipants
 } from './actions';
+import { get } from 'http';
 
 function distributePlayers(
   participants: Participant[],
@@ -78,12 +79,18 @@ export function ParticipantsList({
   participants: initialParticipants,
   userContext
 }: ParticipantsParam) {
+  const getFieldsNumber = () => {
+    // get fields number from local storage
+    const fieldsNumber = localStorage.getItem('fieldsNumber');
+    return fieldsNumber ? parseInt(fieldsNumber) : null;
+  };
+
   const [participants, setParticipants] = useState<Participant[] | null>(
     initialParticipants
   );
   const [isEditing, setIsEditing] = useState(false);
   const [bulkParticipants, setBulkParticipants] = useState('');
-  const [fieldsNumber, setFieldsNumber] = useState<number | null>(null);
+  const [fieldsNumber, setFieldsNumber] = useState<number | null>(1);
   const [editMode, setEditMode] = useState<'bulk' | 'individual'>('bulk');
   const [error, setError] = useState<string | null>(null);
   const [tempParticipants, setTempParticipants] = useState<Participant[]>([]);
@@ -95,6 +102,10 @@ export function ParticipantsList({
     if (!participants || participants.length === 0) {
       setEditMode('bulk');
     }
+
+    // update fields number with local storage value
+    setFieldsNumber(getFieldsNumber());
+
     const fetchParticipants = async () => {
       const newParticipants = await getParticipants(eventId!);
       console.log('eventId', eventId);
@@ -153,6 +164,8 @@ export function ParticipantsList({
       await joinEvent(eventId!, p.playerId, true);
     }
 
+    saveFieldsNumber();
+
     setParticipants(await getParticipants(eventId!));
     setIsEditing(false);
     setBulkParticipants('');
@@ -165,6 +178,13 @@ export function ParticipantsList({
   const removeParticipant = (playerId: number) => {
     setTempParticipants((prev) => prev.filter((p) => p.playerId !== playerId));
     setHasChanges(true);
+  };
+
+  const saveFieldsNumber = async () => {
+    // save fields number in local storage when bulk edit is selected and fields number is provided
+    if (editMode === 'bulk' && fieldsNumber) {
+      localStorage.setItem('fieldsNumber', fieldsNumber.toString());
+    }
   };
 
   function participantTitle() {
@@ -216,7 +236,7 @@ export function ParticipantsList({
             <Input
               placeholder="Enter number of fields"
               type='number'
-              value={fieldsNumber || 1}
+              value={fieldsNumber || ''}
               onChange={(e) => {
                 setFieldsNumber(Number(e.target.value));
               }}
