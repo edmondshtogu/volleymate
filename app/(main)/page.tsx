@@ -38,6 +38,7 @@ export default async function Page() {
           <EventDetails event={upcomingEvent} userContext={userContext} />
           <ParticipantsList
             eventId={upcomingEvent?.id}
+            eventEndTime={upcomingEvent?.endTime}
             participants={upcomingEvent?.participants ?? null}
             userContext={userContext}
           />

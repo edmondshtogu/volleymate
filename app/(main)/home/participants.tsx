@@ -24,7 +24,6 @@ import {
   getParticipants,
   deleteParticipants
 } from './actions';
-import { get } from 'http';
 
 function distributePlayers(
   participants: Participant[],
@@ -70,19 +69,32 @@ function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5, fieldsNumber:
 
 export type ParticipantsParam = {
   eventId: number | undefined;
+  eventEndTime: Date | undefined;
   participants: Participant[] | null;
   userContext: UserContext;
 };
 
 export function ParticipantsList({
   eventId,
+  eventEndTime,
   participants: initialParticipants,
   userContext
 }: ParticipantsParam) {
   const getFieldsNumber = () => {
     // get fields number from local storage
     const fieldsNumber = localStorage.getItem('fieldsNumber');
-    return fieldsNumber ? parseInt(fieldsNumber) : null;
+    const expiryTime = localStorage.getItem('fieldsNrExpiry');
+
+    if (fieldsNumber && expiryTime) {
+      if (new Date().getTime() < parseInt(expiryTime)) {
+        return parseInt(fieldsNumber);
+      } else {
+        localStorage.removeItem('fieldsNumber');
+        localStorage.removeItem('fieldsNrExpiry');
+        return null;
+      }
+    }
+    return null;
   };
 
   const [participants, setParticipants] = useState<Participant[] | null>(
@@ -104,7 +116,7 @@ export function ParticipantsList({
     }
 
     // update fields number with local storage value
-    setFieldsNumber(getFieldsNumber());
+    if (getFieldsNumber()) setFieldsNumber(getFieldsNumber());
 
     const fetchParticipants = async () => {
       const newParticipants = await getParticipants(eventId!);
@@ -184,6 +196,10 @@ export function ParticipantsList({
     // save fields number in local storage when bulk edit is selected and fields number is provided
     if (editMode === 'bulk' && fieldsNumber) {
       localStorage.setItem('fieldsNumber', fieldsNumber.toString());
+      // set expiry time for local storage to event end time
+      if (eventEndTime) {
+        localStorage.setItem('fieldsNrExpiry', eventEndTime.getTime().toString());
+      }
     }
   };
 
