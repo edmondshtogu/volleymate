@@ -8,7 +8,9 @@ import {
   updateEvent,
   searchPlayers as dbSearchPlayers,
   getEventParticipants,
-  deleteParticipantsFromEvent
+  deleteParticipantsFromEvent,
+  updateFieldsNumberFromEvent,
+  getUpcomingEvent
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -67,4 +69,8 @@ export async function getParticipants(eventId: number) {
 
 export async function deleteParticipants() {
   return await deleteParticipantsFromEvent();
+};
+
+export async function updateFieldsNumber(eventId: number, fieldsNumber: number | null) {
+  return await updateFieldsNumberFromEvent(eventId, fieldsNumber);
 };
