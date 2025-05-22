@@ -1,0 +1,2 @@
+ALTER TABLE volley_players
+ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT 'unknown';

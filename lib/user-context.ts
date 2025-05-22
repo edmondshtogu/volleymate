@@ -95,6 +95,5 @@ export async function userHasAdminRole(userId: string): Promise<boolean> {
   }> = await adminUsersResponse.json();
 
   const filtered = adminUsers.filter((user) => user.user_id === userId);
-
   return filtered.length === 1;
 }

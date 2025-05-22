@@ -32,6 +32,7 @@ export const players = pgTable('volley_players', {
   id: serial('id').primaryKey(),
   userId: text('userid').notNull(),
   name: text('name').notNull(),
+  gender: text('gender').notNull().default('unknown'),
   configured: boolean('configured').notNull(),
   serving: smallint('serving').notNull().default(1),
   passing: smallint('passing').notNull().default(1),
@@ -46,6 +47,7 @@ const selectPlayersQuery = () =>
     .select({
       id: players.id,
       name: players.name,
+      gender: players.gender,
       configured: players.configured,
       serving: players.serving,
       passing: players.passing,
@@ -177,6 +179,7 @@ export async function updatePlayerSkills(player: Player): Promise<void> {
   await db
     .update(players)
     .set({
+      gender: player.gender,
       configured: true,
       serving: player.serving,
       passing: player.passing,
@@ -252,6 +255,7 @@ export function getEventParticipants(
     .select({
       playerId: players.id,
       name: players.name,
+      gender: players.gender,
       skillsScore: sql<number>`
       ${players.serving} + 
       ${players.passing} + 
