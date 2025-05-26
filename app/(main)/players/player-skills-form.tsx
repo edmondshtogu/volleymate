@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Info, Save } from 'lucide-react';
+import { Loader2, Info, Save, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip';
-import { Player, SkillScale } from '@/lib/models';
+import { Player, SkillScale, UserContext } from '@/lib/models';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Map skill names to their descriptions
 const skillDescriptions: Record<
@@ -81,23 +82,23 @@ const skillDescriptions: Record<
   }
 };
 
-type SkillKey = keyof Omit<Player, 'id' | 'name' | 'configured'>;
+type SkillKey = keyof Omit<Player, 'id' | 'name' | 'configured' | 'gender'>;
 
 export function PlayerSkillsForm({
   player,
   onSave,
-  onCancel, 
-  event
+  onCancel,
+  event,
+  userContext
 }: {
   player: Player;
   onSave: (player: Player) => Promise<void>;
   onCancel: () => void;
   event: any;
+  userContext: UserContext;
 }) {
   const [formPlayer, setFormPlayer] = useState<Player>(player);
   const [isSaving, setIsSaving] = useState(false);
-
-  console.log('event', event);
 
   const isNotAllowedToSave = () => {
     // Check if the current date is less than 2 days before the event
@@ -144,9 +145,52 @@ export function PlayerSkillsForm({
     { title: 'Athleticism Skills', skill: 'athleticism' }
   ] as const;
 
+  const genderUnset = !formPlayer.gender || formPlayer.gender === 'unknown';
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userContext?.isAdmin && (
+          <Card className="w-full col-span-1 md:col-span-2 lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-lg">Player Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="gender" className="text-sm font-medium text-gray-700">
+                  Gender
+                </Label>
+                {genderUnset &&
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Gender unknown</AlertTitle>
+                    <AlertDescription>
+                      Please set the gender of the player.
+                    </AlertDescription>
+                  </Alert>
+                }
+                <Select
+                  value={genderUnset ? '' : formPlayer.gender}
+                  onValueChange={(value) =>
+                    setFormPlayer((prev) => ({ ...prev, gender: value }))
+                  }
+                  disabled={isSaving}
+                >
+                  <SelectTrigger className={`w-full ${genderUnset ? 'text-muted-foreground italic' : ''}`}>
+                    <SelectValue
+                      placeholder={genderUnset ? 'Gender not configured' : 'Select gender'}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {skillCategories.map((category) => (
           <Card key={category.title} className="w-full">
             <CardHeader>
@@ -155,10 +199,10 @@ export function PlayerSkillsForm({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="sm" className="p-0">
-                        <Info className="h-4 w-4" />
-                        <span className="sr-only">More info</span>
-                      </Button>
+                      <span className="p-0 cursor-default text-muted-foreground">
+                      <Info className="h-4 w-4" />
+                      <span className="sr-only">More info</span>
+                      </span>
                     </TooltipTrigger>
                     <TooltipContent>
                       <div className="max-w-xs">

@@ -9,8 +9,7 @@ import {
   searchPlayers as dbSearchPlayers,
   getEventParticipants,
   deleteParticipantsFromEvent,
-  updateFieldsNumberFromEvent,
-  getUpcomingEvent
+  updateFieldsNumberFromEvent
 } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -18,7 +17,7 @@ import { Event, SearchPlayerResult } from '@/lib/models';
 import { getUserContextFromCookies } from '@/lib/user-context';
 
 export async function editEvent(event: Event): Promise<void> {
-  let userContextFromRequest = await getUserContextFromCookies();
+  const userContextFromRequest = await getUserContextFromCookies();
   if (!userContextFromRequest?.isAdmin) {
     return;
   }
@@ -42,7 +41,6 @@ export async function joinEvent(
   }
 
   const existing = await isPlayerParticipatingEvent(eventId, playerId);
-  console.log('existing', existing);
   if (existing) {
     await updateParticipantWithdrawal(eventId, playerId, null);
   } else {
@@ -69,8 +67,8 @@ export async function getParticipants(eventId: number) {
 
 export async function deleteParticipants() {
   return await deleteParticipantsFromEvent();
-};
+}
 
 export async function updateFieldsNumber(eventId: number, fieldsNumber: number | null) {
   return await updateFieldsNumberFromEvent(eventId, fieldsNumber);
-};
+}

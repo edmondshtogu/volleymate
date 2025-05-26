@@ -101,8 +101,6 @@ export function ParticipantsList({
 
     const fetchParticipants = async () => {
       const newParticipants = await getParticipants(eventId!);
-      console.log('eventId', eventId);
-      console.log('newParticipants', newParticipants);
       setParticipants(newParticipants);
     };
 

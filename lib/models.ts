@@ -8,7 +8,7 @@ export enum SkillScale {
   Beginner = 1,
   Developing = 2,
   Competent = 3,
-  Proficien = 4,
+  Proficient = 4,
   Skilled = 5
 }
 
@@ -20,6 +20,7 @@ export interface SearchPlayerResult {
 export interface Player {
   id: number;
   name: string;
+  gender: string;
   configured: boolean;
   serving: SkillScale;
   passing: SkillScale;
@@ -32,6 +33,7 @@ export interface Player {
 export interface Participant {
   playerId: number;
   name: string;
+  gender: string
   skillsScore: number;
   withdrewAt: Date | null;
 }

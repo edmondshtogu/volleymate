@@ -100,6 +100,7 @@ export function PlayerDetails({
             onSave={handleSave}
             onCancel={() => setIsEditing(false)}
             event={event}
+            userContext={userContext}
           />
         ) : (
           <>
