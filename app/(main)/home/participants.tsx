@@ -307,7 +307,9 @@ export function ParticipantsList({
                   </CardHeader>
                   <CardContent className='players-list'>
                     <ol>
-                      {team.map((participant, i) => (
+                      {team
+                        .sort((p1, p2) => p2.skillsScore - p1.skillsScore)
+                        .map((participant, i) => (
                         <li key={participant.playerId} className="flex items-center justify-between py-1 border-b border-gray-100 last:border-b-0">
                           <span className="font-medium">
                             <span className="inline-block w-6 text-gray-500">{i + 1}.</span>
