@@ -11,7 +11,7 @@ const p = (id: number, skillsScore: number, gender: string): Participant => ({
 } as Participant);
 
 describe('distributePlayers', () => {
-  it('should sort participants by gender (males first) and then  distribute', () => {
+  it('should sort participants by gender and then  distribute', () => {
     const participants: Participant[] = [
       p(1, 5, 'male'),
       p(2, 5, 'female'),
@@ -94,6 +94,38 @@ describe('distributePlayers', () => {
 
     const genderDifference = Math.abs(maxFemalesCount - minFemalesCount);
 
+    expect(genderDifference).toBeLessThanOrEqual(1);
+  });
+
+  it('should sort participants by gender - uneven teams uneven gender number ', () => {
+    const participants: Participant[] = [
+      p(1, 5, 'male'),
+      p(2, 7, 'male'),
+      p(3, 9, 'male'),
+      p(4, 11, 'male'),
+      p(5, 13, 'male'),
+      p(6, 14, 'male'),
+      p(7, 16, 'male'),
+      p(8, 18, 'male'),
+      p(9, 20, 'male'),
+      p(10, 5, 'female'),
+      p(11, 10, 'female'),
+      p(12, 15, 'female'),
+      p(13, 20, 'female'),
+      p(14, 22, 'female')
+    ];
+
+    const teamSizes = [4, 4, 4, 4];
+    const result = distributePlayers(participants, teamSizes);
+
+    const minFemalesCount = Math.min(...result.map(team => team.filter(p =>
+      p.gender === 'female').length));
+    const maxFemalesCount = Math.max(...result.map(team => team.filter(p =>
+      p.gender === 'female').length));
+
+    const genderDifference = Math.abs(maxFemalesCount - minFemalesCount);
+
+    //assert that the difference between max and min is less than or equal to 1
     expect(genderDifference).toBeLessThanOrEqual(1);
   });
 });

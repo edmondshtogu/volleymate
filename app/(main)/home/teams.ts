@@ -11,7 +11,7 @@ export function distributePlayers(
   const males   = participants.filter(p => p.gender !== 'female')
     .sort((a, b) => b.skillsScore - a.skillsScore)
 
-  const sortedParticipants = [...males,...females];
+  const sortedParticipants = [...females,...males];
 
   let direction = 1;
   let teamIndex = 0;

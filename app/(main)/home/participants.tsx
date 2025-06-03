@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardHeader,
@@ -52,6 +52,21 @@ export function ParticipantsList({
   const [hasChanges, setHasChanges] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const maxTeamSize = 6;
+  const teamSizes = useMemo(() => {
+    if (!participants || participants.length === 0 || !fieldsNumber) {
+      return [];
+    }
+    return calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
+  }, [participants, fieldsNumber]);
+
+  const teams = useMemo(() => {
+    if (!participants || participants.length === 0 || teamSizes.length === 0) {
+      return [];
+    }
+    return distributePlayers(participants, teamSizes);
+  }, [participants, teamSizes]);
 
   useEffect(() => {
     if (!participants || participants.length === 0) {
@@ -251,10 +266,6 @@ export function ParticipantsList({
       </Card>
     );
   }
-
-  const maxTeamSize = 6;
-  const teamSizes = calculateTeamSizes(participants.length, maxTeamSize, fieldsNumber);
-  const teams = distributePlayers(participants, teamSizes);
 
   return (
     <Card>
