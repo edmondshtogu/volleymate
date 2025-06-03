@@ -4,40 +4,45 @@ export function distributePlayers(
   participants: Participant[],
   teamSizes: number[]
 ): Participant[][] {
+  // Create empty teams
   const teams: Participant[][] = teamSizes.map(() => []);
 
+  // Separate by gender and sort by skill (highest first)
   const females = participants.filter(p => p.gender === 'female')
-    .sort((a, b) => b.skillsScore - a.skillsScore); // high skill first
-  const males   = participants.filter(p => p.gender !== 'female')
-    .sort((a, b) => b.skillsScore - a.skillsScore)
+    .sort((a, b) => b.skillsScore - a.skillsScore);
+  const males = participants.filter(p => p.gender !== 'female')
+    .sort((a, b) => b.skillsScore - a.skillsScore);
 
-  const sortedParticipants = [...females,...males];
-
-  let direction = 1;
-  let teamIndex = 0;
-
-  for (const participant of sortedParticipants) {
-    teams[teamIndex].push(participant);
-
-    teamIndex += direction;
-    if (teamIndex === teams.length || teamIndex < 0) {
-      direction *= -1;
-      teamIndex += direction;
-    }
+  // First pass: Distribute top female players evenly
+  for (let i = 0; i < females.length; i++) {
+    teams[i % teams.length].push(females[i]);
   }
 
-  return teams;
+  // Second pass: Distribute male players in reverse order
+  // to balance the skill distribution
+  for (let i = 0; i < males.length; i++) {
+    const teamIndex = (teams.length - 1) - (i % teams.length);
+    teams[teamIndex].push(males[i]);
+  }
+
+  // Sort each team by skill (highest first)
+  return teams.map(team => [...team].sort((a, b) => b.skillsScore - a.skillsScore));
 }
 
-export function calculateTeamSizes(totalPlayers: number, maxTeamSize = 5, fieldsNumber: null | number): number[] {
-  // Calculate the number of fields needed based on max team size if fieldsNumber is not provided
-  const numberOfFields = fieldsNumber || Math.ceil(totalPlayers / (maxTeamSize * 2));
-  const numberOfTeams = numberOfFields * 2;
-  const baseSize = Math.floor(totalPlayers / numberOfTeams);
-  const remainder = totalPlayers % numberOfTeams;
+export function calculateTeamSizes(totalPlayers: number, maxTeamSize = 6, fieldsNumber: number | null = null ): number[] {
+  // Calculate the minimum number of fields needed
+  const minFields = Math.ceil(totalPlayers / (maxTeamSize * 2));
+  const numberOfFields = fieldsNumber || minFields;
+  const totalTeams = numberOfFields * 2;
 
-  const teamSizes = Array(numberOfTeams).fill(baseSize);
+  // Calculate base team size and remainder
+  const baseSize = Math.floor(totalPlayers / totalTeams);
+  const remainder = totalPlayers % totalTeams;
 
+  // Create team sizes array
+  const teamSizes = Array(totalTeams).fill(baseSize);
+
+  // Distribute the remainder players starting from the first team
   for (let i = 0; i < remainder; i++) {
     teamSizes[i]++;
   }

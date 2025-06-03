@@ -20,7 +20,6 @@ import { Label } from '@/components/ui/label';
 import {
   searchPlayers,
   joinEvent,
-  leaveEvent,
   getParticipants,
   deleteParticipants,
   updateFieldsNumber,
@@ -121,9 +120,9 @@ export function ParticipantsList({
 
   const handleSave = async () => {
     setIsLoading(true); // Start loading
-    // clean up participants list in DB
+    // a cleanup participants list in DB
     await deleteParticipants();
-    // add new participants to event
+    // add new participants to the event
     for (let i = 0; i < tempParticipants.length; i++) {
       const p = tempParticipants[i];
       await joinEvent(eventId!, p.playerId, true);
@@ -280,8 +279,8 @@ export function ParticipantsList({
                 (total, participant) => total + participant.skillsScore,
                 0
               );
-              const maxTeamScore = team.length * 6 * 5;
-              const teamPercentage = (teamScore / maxTeamScore) * 100;
+              const maxPossibleScore = team.length * 6 * 5; // 6 skills, max 5 each
+              const teamPercentage = (teamScore / maxPossibleScore) * 100;
 
               const backgroundColors = [
                 'bg-red-50/30',
@@ -307,9 +306,7 @@ export function ParticipantsList({
                   </CardHeader>
                   <CardContent className='players-list'>
                     <ol>
-                      {team
-                        .sort((p1, p2) => p2.skillsScore - p1.skillsScore)
-                        .map((participant, i) => (
+                      {team.map((participant, i) => (
                         <li key={participant.playerId} className="flex items-center justify-between py-1 border-b border-gray-100 last:border-b-0">
                           <span className="font-medium">
                             <span className="inline-block w-6 text-gray-500">{i + 1}.</span>
