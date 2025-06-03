@@ -4,29 +4,37 @@ export function distributePlayers(
   participants: Participant[],
   teamSizes: number[]
 ): Participant[][] {
-  // Create empty teams
   const teams: Participant[][] = teamSizes.map(() => []);
 
-  // Separate by gender and sort by skill (highest first)
-  const females = participants.filter(p => p.gender === 'female')
-    .sort((a, b) => b.skillsScore - a.skillsScore);
-  const males = participants.filter(p => p.gender !== 'female')
-    .sort((a, b) => b.skillsScore - a.skillsScore);
+  // Sort by skillsScore DESC, then by playerId ASC to ensure deterministic order
+  const sortParticipants = (a: Participant, b: Participant) => {
+    if (b.skillsScore !== a.skillsScore) {
+      return b.skillsScore - a.skillsScore;
+    }
+    return a.playerId - b.playerId;
+  };
 
-  // First pass: Distribute top female players evenly
+  const females = participants
+    .filter(p => p.gender === 'female')
+    .sort(sortParticipants);
+
+  const males = participants
+    .filter(p => p.gender !== 'female')
+    .sort(sortParticipants);
+
+  // Distribute females round-robin
   for (let i = 0; i < females.length; i++) {
     teams[i % teams.length].push(females[i]);
   }
 
-  // Second pass: Distribute male players in reverse order
-  // to balance the skill distribution
+  // Distribute males in reverse round-robin
   for (let i = 0; i < males.length; i++) {
     const teamIndex = (teams.length - 1) - (i % teams.length);
     teams[teamIndex].push(males[i]);
   }
 
-  // Sort each team by skill (highest first)
-  return teams.map(team => [...team].sort((a, b) => b.skillsScore - a.skillsScore));
+  // Sort each team by skillsScore DESC, then playerId ASC
+  return teams.map(team => [...team].sort(sortParticipants));
 }
 
 export function calculateTeamSizes(totalPlayers: number, maxTeamSize = 6, fieldsNumber: number | null = null ): number[] {

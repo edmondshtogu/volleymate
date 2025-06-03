@@ -128,4 +128,27 @@ describe('distributePlayers', () => {
     //assert that the difference between max and min is less than or equal to 1
     expect(genderDifference).toBeLessThanOrEqual(1);
   });
+
+  it('should be idempotent – return the same result for the same input', () => {
+    const participants: Participant[] = [
+      p(1, 10, 'male'),
+      p(2, 10, 'female'),
+      p(3, 8, 'male'),
+      p(4, 8, 'female'),
+      p(5, 6, 'male'),
+      p(6, 6, 'female'),
+      p(7, 4, 'male'),
+      p(8, 4, 'female'),
+    ];
+
+    const teamSizes = [2, 2, 2, 2];
+
+    const result1 = distributePlayers([...participants], teamSizes);
+    const result2 = distributePlayers([...participants], teamSizes);
+    const result3 = distributePlayers([...participants], teamSizes);
+
+    // Check deep equality of results
+    expect(result1).toEqual(result2);
+    expect(result2).toEqual(result3);
+  });
 });
